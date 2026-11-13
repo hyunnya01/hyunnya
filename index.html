@@ -4,690 +4,185 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>멸망전 스크림 기록</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Google Fonts (Pretendard) -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Pretendard', sans-serif; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #0b0f19; color: #f3f4f6; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased text-base">
+<body class="min-h-screen flex flex-col">
 
     <!-- 상단 헤더 -->
-    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 h-20 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold tracking-tight text-white">멸망전 스크림 기록</h1>
-                    <p class="text-sm text-slate-400">실시간 스크림 전적 및 소환사 분석</p>
-                </div>
+    <header class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 p-2 rounded-xl text-white font-bold text-xl">⚡</div>
+            <div>
+                <h1 class="text-lg font-bold text-white">멸망전 스크림 기록</h1>
+                <p class="text-xs text-gray-400">실시간 스크림 전적 및 소환사 분석</p>
             </div>
-
-            <!-- 관리자 인증 상태 표시 -->
-            <div class="flex items-center space-x-3">
-                <div id="admin-badge" class="hidden items-center space-x-2 bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-full text-sm font-medium border border-emerald-500/20">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>관리자 모드</span>
-                </div>
-                <button onclick="openAdminModal()" id="admin-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl text-sm font-semibold transition border border-slate-700 flex items-center space-x-2 shadow-sm">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                    <span id="admin-btn-text">관리자 로그인</span>
-                </button>
-            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button id="admin-badge" class="hidden bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold">
+                🟢 관리자 모드
+            </button>
+            <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
+                🔒 관리자 설정
+            </button>
         </div>
     </header>
 
-    <!-- 네비게이션 탭 -->
-    <nav class="border-b border-slate-800 bg-slate-900/40">
-        <div class="max-w-6xl mx-auto px-4 flex space-x-4">
-            <button onclick="switchTab('search')" id="tab-search" class="py-4 px-5 border-b-2 font-semibold text-base transition border-indigo-500 text-indigo-400">
-                🔍 전적 검색 & 모스트
-            </button>
-            <button onclick="switchTab('record')" id="tab-record" class="py-4 px-5 border-b-2 font-semibold text-base transition border-transparent text-slate-400 hover:text-slate-200">
-                ➕ 경기 기록 <span id="record-lock-icon" class="text-xs ml-1 bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">🔒 잠김</span>
-            </button>
-            <button onclick="switchTab('matches')" id="tab-matches" class="py-4 px-5 border-b-2 font-semibold text-base transition border-transparent text-slate-400 hover:text-slate-200">
-                📋 전체 매치 (<span id="match-count">0</span>)
-            </button>
-        </div>
+    <!-- 탭 네비게이션 -->
+    <nav class="flex border-b border-gray-800 bg-gray-900/50 px-6 space-x-6">
+        <button onclick="switchTab('search')" id="tab-search" class="py-3.5 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400 transition">
+            🔍 전적 검색 & 모스트
+        </button>
+        <button onclick="switchTab('record')" id="tab-record" class="py-3.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition">
+            ➕ 경기 기록
+        </button>
+        <button onclick="switchTab('matches')" id="tab-matches" class="py-3.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition">
+            📋 전체 매치 (<span id="match-count">0</span>)
+        </button>
     </nav>
 
     <!-- 메인 컨텐츠 영역 -->
-    <main class="max-w-6xl mx-auto px-4 py-8 flex-grow w-full">
+    <main class="flex-1 max-w-6xl w-full mx-auto p-6 space-y-6">
 
         <!-- 1. 전적 검색 탭 -->
-        <section id="section-search" class="space-y-8">
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
-                <label class="block text-base font-semibold text-slate-300 mb-3">소환사 검색 (롤닉#태그 또는 닉네임)</label>
-                <div class="relative">
-                    <input type="text" id="summoner-search-input" oninput="handleSearchInput()" placeholder="예: 칭찬양파#안자람 또는 칭찬양파" 
-                        class="w-full bg-slate-950 border border-slate-700 rounded-xl px-5 py-4 text-lg text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
-                    <div id="autocomplete-list" class="absolute left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl max-h-60 overflow-y-auto z-20 hidden"></div>
+        <section id="section-search" class="space-y-6">
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-3">
+                <label class="text-xs font-semibold text-gray-400">소환사 검색 (롤닉#태그 또는 닉네임)</label>
+                <div class="flex gap-3">
+                    <input type="text" id="search-input" placeholder="예: 칭찬양파#안자람 또는 칭찬양파" class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-white placeholder-gray-500" onkeypress="if(event.key==='Enter') searchSummoner()">
+                    <button onclick="searchSummoner()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl text-sm font-semibold transition">검색</button>
                 </div>
-                <p class="text-sm text-slate-500 mt-2">등록된 소환사의 닉네임 일부만 입력해도 추천 목록이 나타납니다.</p>
+                <p class="text-xs text-gray-500">등록된 소환사의 닉네임 일부만 입력해도 추천 목록이 나타납니다.</p>
             </div>
 
-            <!-- 검색 결과 표시 영역 -->
-            <div id="search-result-container" class="space-y-6 hidden">
-                <!-- 요약 카드 -->
-                <div class="bg-gradient-to-r from-slate-900 to-slate-900/80 border border-slate-800 rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-                    <div class="flex items-center space-x-5">
-                        <div class="w-20 h-20 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-3xl font-extrabold text-indigo-400 shadow-inner" id="res-initial">
-                            ?
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-bold text-white flex items-center space-x-2">
-                                <span id="res-summoner-name">닉네임#태그</span>
-                            </h2>
-                            <p class="text-base text-slate-400 mt-1">주 포지션: <span id="res-main-position" class="text-indigo-400 font-semibold">-</span></p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-8 bg-slate-950/60 px-6 py-4 rounded-xl border border-slate-800/80">
-                        <div class="text-center">
-                            <div class="text-sm text-slate-400 font-medium">전적</div>
-                            <div class="text-xl font-bold text-white mt-0.5"><span id="res-total-games">0</span>전 <span id="res-wins" class="text-blue-400">0</span>승 <span id="res-losses" class="text-rose-400">0</span>패</div>
-                        </div>
-                        <div class="h-10 w-px bg-slate-800"></div>
-                        <div class="text-center">
-                            <div class="text-sm text-slate-400 font-medium">승률</div>
-                            <div class="text-2xl font-extrabold text-indigo-400 mt-0.5" id="res-winrate">0%</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 모스트 챔피언 리스트 -->
-                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
-                    <h3 class="text-xl font-bold text-white mb-6 flex items-center space-x-2">
-                        <span>🏆 모스트 챔피언 순위</span>
-                    </h3>
-                    <div id="most-champions-list" class="space-y-4">
-                        <!-- 동적 생성 -->
-                    </div>
+            <!-- 빠른 소환사 태그 목록 -->
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-3">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">등록된 소환사 목록</h3>
+                <div id="quick-tags" class="flex flex-wrap gap-2">
+                    <!-- 동적으로 채워집니다 -->
                 </div>
             </div>
 
-            <!-- 안내 상태 -->
-            <div id="search-empty-state" class="text-center py-16 bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl">
-                <svg class="w-16 h-16 text-slate-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <p class="text-lg text-slate-400 font-medium">검색할 소환사 닉네임을 입력해 주세요.</p>
-                <p class="text-sm text-slate-600 mt-1">하단에 등록된 선수 태그를 클릭해도 바로 조회할 수 있습니다.</p>
-            </div>
-
-            <!-- 빠른 선수 태그 클라우드 -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-                <h4 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">등록된 소환사 목록</h4>
-                <div id="quick-summoner-tags" class="flex flex-wrap gap-2.5">
-                    <!-- 동적 생성 -->
-                </div>
+            <div id="search-result" class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-500">
+                <div class="text-3xl mb-2">🔍</div>
+                <p class="text-sm">검색할 소환사 닉네임을 입력해 주세요.</p>
+                <p class="text-xs text-gray-600 mt-1">하단에 등록된 선수 태그를 클릭해도 바로 조회할 수 있습니다.</p>
             </div>
         </section>
 
         <!-- 2. 경기 기록 탭 (관리자 전용) -->
-        <section id="section-record" class="hidden space-y-8">
-            <div id="record-lock-banner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-2xl p-6 text-center">
-                <p class="text-amber-300 font-semibold text-lg mb-2">🔒 관리자 전용 메뉴입니다</p>
-                <p class="text-slate-400 text-sm mb-4">경기 기록을 추가하려면 우측 상단의 [관리자 로그인] 버튼을 눌러주세요.</p>
-                <button onclick="openAdminModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2.5 rounded-xl transition shadow-lg">관리자 로그인하기</button>
+        <section id="section-record" class="hidden space-y-6">
+            <div id="record-lock-msg" class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-400">
+                🔒 경기 기록 등록은 <span class="text-indigo-400 font-semibold">관리자 모드</span>에서만 가능합니다. 우측 상단 '관리자 설정'을 눌러 로그인해주세요.
             </div>
-
-            <form id="scrim-form" onsubmit="handleScrimSubmit(event)" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl space-y-8">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6">
+            
+            <div id="record-form-container" class="hidden bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-6">
+                <div class="flex items-center justify-between border-b border-gray-800 pb-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-white">새 스크림 경기 등록</h2>
-                        <p class="text-sm text-slate-400 mt-1">블루팀과 레드팀의 라인업 및 승패 결과를 입력하세요.</p>
+                        <h2 class="text-base font-bold text-white">새 스크림 경기 등록</h2>
+                        <p class="text-xs text-gray-400">블루팀과 레드팀의 라인업 및 승패 결과를 입력하세요.</p>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <label class="text-sm font-semibold text-slate-300">경기 승리 팀:</label>
-                        <select id="winner-team" class="bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold focus:outline-none focus:border-indigo-500">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-xs font-semibold text-gray-400">경기 승리 팀:</label>
+                        <select id="match-winner" class="bg-gray-950 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500">
                             <option value="blue">🔵 블루팀 승리</option>
                             <option value="red">🔴 레드팀 승리</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- 블루팀 입력 -->
-                    <div class="bg-blue-950/20 border border-blue-900/40 rounded-2xl p-6 space-y-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-bold text-blue-400 flex items-center space-x-2">
-                                <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-                                <span>블루팀 (Blue Side)</span>
-                            </h3>
+                    <div class="bg-gray-950 border border-blue-900/40 p-4 rounded-xl space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-blue-400">🔵 블루팀 (Blue Side)</h3>
+                            <button onclick="addPlayerRow('blue')" class="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs px-2.5 py-1.5 rounded-lg border border-blue-500/30 transition">+ 선수 추가</button>
                         </div>
-                        <div id="blue-players-inputs" class="space-y-3">
-                            <!-- JS 생성 -->
-                        </div>
+                        <div id="blue-players" class="space-y-3"></div>
                     </div>
 
                     <!-- 레드팀 입력 -->
-                    <div class="bg-rose-950/20 border border-rose-900/40 rounded-2xl p-6 space-y-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="text-lg font-bold text-rose-400 flex items-center space-x-2">
-                                <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                                <span>레드팀 (Red Side)</span>
-                            </h3>
+                    <div class="bg-gray-950 border border-red-900/40 p-4 rounded-xl space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-bold text-red-400">🔴 레드팀 (Red Side)</h3>
+                            <button onclick="addPlayerRow('red')" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs px-2.5 py-1.5 rounded-lg border border-red-500/30 transition">+ 선수 추가</button>
                         </div>
-                        <div id="red-players-inputs" class="space-y-3">
-                            <!-- JS 생성 -->
-                        </div>
+                        <div id="red-players" class="space-y-3"></div>
                     </div>
                 </div>
 
-                <div class="flex justify-end pt-4">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-8 py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/30 text-base">
-                        경기 기록 저장하기
-                    </button>
+                <div class="flex justify-end pt-2">
+                    <button onclick="saveMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-indigo-600/20">경기 기록 저장하기</button>
                 </div>
-            </form>
+            </div>
         </section>
 
         <!-- 3. 전체 매치 탭 -->
         <section id="section-matches" class="hidden space-y-6">
             <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-white">전체 매치 히스토리</h2>
-                <p class="text-sm text-slate-400">총 <span id="total-match-count">0</span>경기 기록됨</p>
+                <h2 class="text-base font-bold text-white">전체 매치 히스토리</h2>
+                <span class="text-xs text-gray-400">총 <span id="match-total-count">0</span>경기 기록됨</span>
             </div>
-            <div id="matches-list-container" class="space-y-4">
-                <!-- 동적 생성 -->
-            </div>
-            <div id="matches-empty-state" class="text-center py-16 bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl hidden">
-                <p class="text-lg text-slate-400 font-medium">등록된 스크림 경기가 없습니다.</p>
+            <div id="match-list" class="space-y-4">
+                <!-- 매치 리스트가 동적으로 렌더링됩니다 -->
             </div>
         </section>
 
     </main>
 
-    <!-- 관리자 로그인 모달 -->
-    <div id="admin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl space-y-6">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-bold text-white">관리자 인증</h3>
-                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white">&times;</button>
-            </div>
-            
-            <div id="login-form-area" class="space-y-4">
-                <p class="text-sm text-slate-400">경기 기록 추가 및 삭제를 위해 관리자 비밀번호를 입력하세요. (기본: 1234)</p>
-                <input type="password" id="admin-pw-input" placeholder="비밀번호 입력" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
-                <div id="login-error" class="text-rose-400 text-xs hidden">비밀번호가 일치하지 않습니다.</div>
-                <div class="flex space-x-3 pt-2">
-                    <button onclick="handleAdminLogin()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition">로그인</button>
-                    <button onclick="closeAdminModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl transition">취소</button>
-                </div>
-            </div>
-
-            <div id="logout-form-area" class="space-y-4 hidden">
-                <p class="text-sm text-emerald-400 font-medium">현재 관리자 모드로 로그인되어 있습니다.</p>
-                <div class="border-t border-slate-800 pt-4 space-y-3">
-                    <label class="block text-sm font-semibold text-slate-300">관리자 비밀번호 변경</label>
-                    <input type="password" id="new-pw-input" placeholder="새 비밀번호 입력" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500">
-                    <button onclick="handleChangePassword()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl transition border border-slate-700">비밀번호 변경하기</button>
-                </div>
-                <div class="flex space-x-3 pt-4">
-                    <button onclick="handleAdminLogout()" class="flex-1 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 font-bold py-3 rounded-xl transition">로그아웃</button>
-                    <button onclick="closeAdminModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-3 rounded-xl transition">닫기</button>
-                </div>
+    <!-- 관리자 비밀번호 모달 -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl w-80 space-y-4">
+            <h3 class="text-base font-bold text-white">관리자 모드 로그인</h3>
+            <p class="text-xs text-gray-400">관리자 비밀번호를 입력해주세요. (기본: 1234)</p>
+            <input type="password" id="admin-pw" placeholder="비밀번호 입력" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" onkeypress="if(event.key==='Enter') verifyAdmin()">
+            <div class="flex space-x-2 pt-2">
+                <button onclick="closeAdminModal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-semibold transition">취소</button>
+                <button onclick="verifyAdmin()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-semibold transition">확인</button>
             </div>
         </div>
     </div>
 
-    <!-- 푸터 -->
-    <footer class="border-t border-slate-800 py-8 text-center text-sm text-slate-500 bg-slate-900/20 mt-auto">
-        <p>멸망전 스크림 기록 시스템 &copy; 2026</p>
-    </footer>
-
-    <!-- 자바스크립트 로직 -->
     <script>
-        const POSITIONS = [
-            { id: 'top', label: 'TOP', color: 'text-amber-400' },
-            { id: 'jg', label: 'JG', color: 'text-emerald-400' },
-            { id: 'mid', label: 'MID', color: 'text-sky-400' },
-            { id: 'bot', label: 'BOT', color: 'text-indigo-400' },
-            { id: 'sup', label: 'SUP', color: 'text-rose-400' }
-        ];
+        let isAdmin = false;
+        let matches = JSON.parse(localStorage.getItem('lol_scrim_matches') || '[]');
 
-        // 기본 샘플 데이터 (초기 방문 시)
-        const DEFAULT_MATCHES = [
-            {
-                id: "match_1",
-                date: "2026-11-13 20:00",
-                winner: "blue",
-                blue: [
-                    { position: "TOP", name: "칭찬양파#안자람", champion: "아트록스" },
-                    { position: "JG", name: "엄준식#KR1", champion: "신짜오" },
-                    { position: "MID", name: "페이커#T1", champion: "아리" },
-                    { position: "BOT", name: "룰러#GEN", champion: "자야" },
-                    { position: "SUP", name: "베릴#DRX", champion: "노틸러스" }
-                ],
-                red: [
-                    { position: "TOP", name: "제우스#T1", champion: "케넨" },
-                    { position: "JG", name: "오너#T1", champion: "리신" },
-                    { position: "MID", name: "쵸비#GEN", champion: "요네" },
-                    { position: "BOT", name: "구마유시#T1", champion: "바루스" },
-                    { position: "SUP", name: "케리아#T1", champion: "쓰레쉬" }
-                ]
-            },
-            {
-                id: "match_2",
-                date: "2026-11-13 21:30",
-                winner: "red",
-                blue: [
-                    { position: "TOP", name: "제우스#T1", champion: "그라가스" },
-                    { position: "JG", name: "오너#T1", champion: "비에고" },
-                    { position: "MID", name: "칭찬양파#안자람", champion: "오리아나" },
-                    { position: "BOT", name: "구마유시#T1", champion: "이즈리얼" },
-                    { position: "SUP", name: "케리아#T1", champion: "카르마" }
-                ],
-                red: [
-                    { position: "TOP", name: "기인#GEN", champion: "럼블" },
-                    { position: "JG", name: "캐니언#GEN", caption: "니달리", champion: "니달리" },
-                    { position: "MID", name: "페이커#T1", champion: "사일러스" },
-                    { position: "BOT", name: "룰러#GEN", champion: "카이사" },
-                    { position: "SUP", name: "리헨즈#GEN", champion: "레오나" }
-                ]
-            }
-        ];
-
-        let matches = JSON.parse(localStorage.getItem('scrim_matches')) || DEFAULT_MATCHES;
-        let isAdmin = localStorage.getItem('scrim_is_admin') === 'true';
-        let adminPassword = localStorage.getItem('scrim_admin_pw') || '1234';
-
-        // 초기화 실행
-        window.addEventListener('DOMContentLoaded', () => {
-            updateAdminUI();
-            renderScrimFormInputs();
+        function init() {
+            updateMatchCount();
             renderMatches();
+            setupDefaultPlayers();
             renderQuickTags();
-        });
+        }
 
-        // 탭 전환
-        function switchTab(tabId) {
+        function switchTab(tabName) {
             ['search', 'record', 'matches'].forEach(t => {
                 document.getElementById(`section-${t}`).classList.add('hidden');
-                document.getElementById(`tab-${t}`).className = "py-4 px-5 border-b-2 font-semibold text-base transition border-transparent text-slate-400 hover:text-slate-200";
+                document.getElementById(`tab-${t}`).classList.remove('border-indigo-500', 'text-indigo-400');
+                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-gray-400');
             });
-            document.getElementById(`section-${tabId}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabId}`).className = "py-4 px-5 border-b-2 font-semibold text-base transition border-indigo-500 text-indigo-400";
-            
-            if (tabId === 'search') {
-                renderQuickTags();
-            } else if (tabId === 'matches') {
-                renderMatches();
-            }
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('border-indigo-500', 'text-indigo-400');
+            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-gray-400');
+
+            if (tabName === 'matches') renderMatches();
+            if (tabName === 'search') renderQuickTags();
         }
 
-        // 폼 입력 필드 생성
-        function renderScrimFormInputs() {
-            const allSummoners = getAllSummonersList();
-            
-            const blueContainer = document.getElementById('blue-players-inputs');
-            blueContainer.innerHTML = POSITIONS.map(p => `
-                <div class="flex items-center space-x-2">
-                    <span class="w-12 text-sm font-bold ${p.color}">${p.label}</span>
-                    <input type="text" placeholder="롤닉#태그" list="summoner-datalist" required
-                        class="blue-name flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" data-pos="${p.label}">
-                    <input type="text" placeholder="챔피언명" required
-                        class="blue-champ w-28 md:w-36 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
-                </div>
-            `).join('');
-
-            const redContainer = document.getElementById('red-players-inputs');
-            redContainer.innerHTML = POSITIONS.map(p => `
-                <div class="flex items-center space-x-2">
-                    <span class="w-12 text-sm font-bold ${p.color}">${p.label}</span>
-                    <input type="text" placeholder="롤닉#태그" list="summoner-datalist" required
-                        class="red-name flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" data-pos="${p.label}">
-                    <input type="text" placeholder="챔피언명" required
-                        class="red-champ w-28 md:w-36 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
-                </div>
-            `).join('');
-
-            // datalist 추가
-            if (!document.getElementById('summoner-datalist')) {
-                const dl = document.createElement('datalist');
-                dl.id = 'summoner-datalist';
-                dl.innerHTML = allSummoners.map(s => `<option value="${s}">`).join('');
-                document.body.appendChild(dl);
-            } else {
-                document.getElementById('summoner-datalist').innerHTML = allSummoners.map(s => `<option value="${s}">`).join('');
-            }
-        }
-
-        // 전체 소환사 목록 추출
-        function getAllSummonersList() {
-            const set = new Set();
-            matches.forEach(m => {
-                m.blue.forEach(p => set.add(p.name));
-                m.red.forEach(p => set.add(p.name));
-            });
-            return Array.from(set);
-        }
-
-        // 경기 기록 저장
-        function handleScrimSubmit(e) {
-            e.preventDefault();
-            if (!isAdmin) {
-                alert('관리자 권한이 필요합니다.');
-                return;
-            }
-
-            const blueInputsNames = document.querySelectorAll('.blue-name');
-            const blueInputsChamps = document.querySelectorAll('.blue-champ');
-            const redInputsNames = document.querySelectorAll('.red-name');
-            const redInputsChamps = document.querySelectorAll('.red-champ');
-
-            const blueTeam = [];
-            const redTeam = [];
-
-            for (let i = 0; i < POSITIONS.length; i++) {
-                const bName = blueInputsNames[i].value.trim();
-                const rName = redInputsNames[i].value.trim();
-
-                if (!bName.includes('#') || !rName.includes('#')) {
-                    alert('모든 소환사 닉네임은 "롤닉#태그" 형식(예: 칭찬양파#안자람)으로 입력해주세요.');
-                    return;
-                }
-
-                blueTeam.push({
-                    position: POSITIONS[i].label,
-                    name: bName,
-                    champion: blueInputsChamps[i].value.trim()
-                });
-
-                redTeam.push({
-                    position: POSITIONS[i].label,
-                    name: rName,
-                    champion: redInputsChamps[i].value.trim()
-                });
-            }
-
-            const newMatch = {
-                id: 'match_' + Date.now(),
-                date: new Date().toLocaleString('ko-KR', { hour12: false }),
-                winner: document.getElementById('winner-team').value,
-                blue: blueTeam,
-                red: redTeam
-            };
-
-            matches.unshift(newMatch);
-            localStorage.setItem('scrim_matches', JSON.stringify(matches));
-
-            alert('경기가 성공적으로 등록되었습니다!');
-            document.getElementById('scrim-form').reset();
-            renderMatches();
-            renderQuickTags();
-            renderScrimFormInputs();
-            switchTab('matches');
-        }
-
-        // 매치 삭제
-        function deleteMatch(matchId) {
-            if (!isAdmin) {
-                alert('관리자 권한이 필요합니다.');
-                return;
-            }
-            if (confirm('정말 이 경기 기록을 삭제하시겠습니까?')) {
-                matches = matches.filter(m => m.id !== matchId);
-                localStorage.setItem('scrim_matches', JSON.stringify(matches));
-                renderMatches();
-                renderQuickTags();
-                renderScrimFormInputs();
-            }
-        }
-
-        // 전체 매치 렌더링
-        function renderMatches() {
-            const container = document.getElementById('matches-list-container');
-            const emptyState = document.getElementById('matches-empty-state');
-            document.getElementById('match-count').innerText = matches.length;
-            document.getElementById('total-match-count').innerText = matches.length;
-
-            if (matches.length === 0) {
-                container.innerHTML = '';
-                emptyState.classList.remove('hidden');
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-            container.innerHTML = matches.map(m => `
-                <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                        <div class="flex items-center space-x-3">
-                            <span class="text-sm text-slate-400 font-medium">${m.date}</span>
-                            <span class="px-3 py-1 rounded-full text-xs font-bold ${m.winner === 'blue' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
-                                ${m.winner === 'blue' ? '🔵 블루팀 승리' : '🔴 레드팀 승리'}
-                            </span>
-                        </div>
-                        ${isAdmin ? `<button onclick="deleteMatch('${m.id}')" class="text-slate-500 hover:text-rose-400 text-sm font-semibold transition">삭제</button>` : ''}
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- 블루팀 로스터 -->
-                        <div class="space-y-2">
-                            <div class="text-xs font-bold text-blue-400 tracking-wider uppercase">Blue Side</div>
-                            <div class="space-y-1.5">
-                                ${m.blue.map(p => `
-                                    <div class="flex justify-between items-center bg-slate-950/40 px-3.5 py-2 rounded-xl text-sm border border-slate-800/60">
-                                        <div class="flex items-center space-x-3">
-                                            <span class="w-10 font-bold text-slate-400">${p.position}</span>
-                                            <span class="text-white font-medium cursor-pointer hover:text-indigo-400" onclick="searchSummoner('${p.name}')">${formatSummonerName(p.name)}</span>
-                                        </div>
-                                        <span class="text-slate-400 bg-slate-900 px-2.5 py-1 rounded-lg text-xs">${p.champion}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-
-                        <!-- 레드팀 로스터 -->
-                        <div class="space-y-2">
-                            <div class="text-xs font-bold text-rose-400 tracking-wider uppercase">Red Side</div>
-                            <div class="space-y-1.5">
-                                ${m.red.map(p => `
-                                    <div class="flex justify-between items-center bg-slate-950/40 px-3.5 py-2 rounded-xl text-sm border border-slate-800/60">
-                                        <div class="flex items-center space-x-3">
-                                            <span class="w-10 font-bold text-slate-400">${p.position}</span>
-                                            <span class="text-white font-medium cursor-pointer hover:text-indigo-400" onclick="searchSummoner('${p.name}')">${formatSummonerName(p.name)}</span>
-                                        </div>
-                                        <span class="text-slate-400 bg-slate-900 px-2.5 py-1 rounded-lg text-xs">${p.champion}</span>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // 닉네임 포맷팅 (#태그 색상 다르게)
-        function formatSummonerName(fullName) {
-            const parts = fullName.split('#');
-            if (parts.length === 2) {
-                return `${parts.F[0] || parts[0]}<span class="text-slate-500 text-xs ml-0.5">#${parts[1]}</span>`;
-            }
-            return fullName;
-        }
-
-        // 빠른 선수 태그
-        function renderQuickTags() {
-            const list = getAllSummonersList();
-            const container = document.getElementById('quick-summoner-tags');
-            if (list.length === 0) {
-                container.innerHTML = '<span class="text-sm text-slate-500">등록된 선수가 없습니다.</span>';
-                return;
-            }
-            container.innerHTML = list.map(name => `
-                <button onclick="searchSummoner('${name}')" class="bg-slate-800/80 hover:bg-indigo-600/20 hover:border-indigo-500/40 text-slate-300 hover:text-indigo-300 px-3.5 py-2 rounded-xl text-sm font-medium transition border border-slate-700">
-                    ${name}
-                </button>
-            `).join('');
-        }
-
-        // 검색 입력 및 자동완성
-        function handleSearchInput() {
-            const query = document.getElementById('summoner-search-input').value.trim().toLowerCase();
-            const listContainer = document.getElementById('autocomplete-list');
-            
-            if (!query) {
-                listContainer.classList.add('hidden');
-                document.getElementById('search-result-container').classList.add('hidden');
-                document.getElementById('search-empty-state').classList.remove('hidden');
-                return;
-            }
-
-            const allSummoners = getAllSummonersList();
-            const filtered = allSummoners.filter(s => s.toLowerCase().includes(query));
-
-            if (filtered.length > 0) {
-                listContainer.innerHTML = filtered.map(s => `
-                    <div onclick="selectSummoner('${s}')" class="px-4 py-3 hover:bg-slate-800 cursor-pointer text-white text-sm border-b border-slate-800/50 last:border-0">
-                        ${s}
-                    </div>
-                `).join('');
-                listContainer.classList.remove('hidden');
-            } else {
-                listContainer.classList.add('hidden');
-            }
-
-            // 정확히 일치하거나 닉네임 부분이 일치하는 경우 즉시 검색 수행
-            const exactMatch = allSummoners.find(s => s.toLowerCase() === query || s.toLowerCase().startsWith(query));
-            if (exactMatch) {
-                performSearch(exactMatch);
-            }
-        }
-
-        function selectSummoner(name) {
-            document.getElementById('summoner-search-input').value = name;
-            document.getElementById('autocomplete-list').classList.add('hidden');
-            performSearch(name);
-        }
-
-        function searchSummoner(name) {
-            switchTab('search');
-            document.getElementById('summoner-search-input').value = name;
-            document.getElementById('autocomplete-list').classList.add('hidden');
-            performSearch(name);
-        }
-
-        // 전적 분석 계산
-        function performSearch(queryName) {
-            const lowerQuery = queryName.toLowerCase();
-            let totalGames = 0;
-            let wins = 0;
-            let losses = 0;
-            const champStats = {};
-            const posCounts = {};
-
-            matches.forEach(m => {
-                // 블루팀 탐색
-                m.blue.forEach(p => {
-                    if (p.name.toLowerCase() === lowerQuery || p.name.toLowerCase().split('#')[0] === lowerQuery) {
-                        totalGames++;
-                        const isWin = m.winner === 'blue';
-                        if (isWin) wins++; else losses++;
-
-                        // 챔피언 통계
-                        if (!champStats[p.champion]) champStats[p.champion] = { games: 0, wins: 0 };
-                        champStats[p.champion].games++;
-                        if (isWin) champStats[p.champion].wins++;
-
-                        // 포지션 카운트
-                        posCounts[p.position] = (posCounts[p.position] || 0) + 1;
-                    }
-                });
-
-                // 레드팀 탐색
-                m.red.forEach(p => {
-                    if (p.name.toLowerCase() === lowerQuery || p.name.toLowerCase().split('#')[0] === lowerQuery) {
-                        totalGames++;
-                        const isWin = m.winner === 'red';
-                        if (isWin) wins++; else losses++;
-
-                        // 챔피언 통계
-                        if (!champStats[p.champion]) champStats[p.champion] = { games: 0, wins: 0 };
-                        champStats[p.champion].games++;
-                        if (isWin) champStats[p.champion].wins++;
-
-                        // 포지션 카운트
-                        posCounts[p.position] = (posCounts[p.position] || 0) + 1;
-                    }
-                });
-            });
-
-            if (totalGames === 0) {
-                document.getElementById('search-result-container').classList.add('hidden');
-                document.getElementById('search-empty-state').classList.remove('hidden');
-                return;
-            }
-
-            document.getElementById('search-empty-state').classList.add('hidden');
-            document.getElementById('search-result-container').classList.remove('hidden');
-
-            // 요약 반영
-            const matchedFullName = getAllSummonersList().find(s => s.toLowerCase() === lowerQuery || s.toLowerCase().split('#')[0] === lowerQuery) || queryName;
-            document.getElementById('res-summoner-name').innerHTML = formatSummonerName(matchedFullName);
-            document.getElementById('res-initial').innerText = matchedFullName.charAt(0).toUpperCase();
-            document.getElementById('res-total-games').innerText = totalGames;
-            document.getElementById('res-wins').innerText = wins;
-            document.getElementById('res-losses').innerText = losses;
-            
-            const winRate = Math.round((wins / totalGames) * 100);
-            document.getElementById('res-winrate').innerText = winRate + '%';
-
-            // 주 포지션 결정
-            let mainPos = '-';
-            let maxPosCount = 0;
-            for (const [pos, cnt] of Object.entries(posCounts)) {
-                if (cnt > maxPosCount) {
-                    maxPosCount = cnt;
-                    mainPos = pos;
-                }
-            }
-            document.getElementById('res-main-position').innerText = `${mainPos} (${Math.round((maxPosCount/totalGames)*100)}% 비중)`;
-
-            // 모스트 챔피언 정렬
-            const sortedChamps = Object.entries(champStats).sort((a, b) => b[1].games - a[1].games);
-            const champContainer = document.getElementById('most-champions-list');
-            
-            champContainer.innerHTML = sortedChamps.map(([champ, stat]) => {
-                const cWinRate = Math.round((stat.wins / stat.games) * 100);
-                return `
-                    <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 flex items-center justify-between gap-4">
-                        <div class="flex items-center space-x-4">
-                            <div class="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-300">
-                                ${champ.charAt(0)}
-                            </div>
-                            <div>
-                                <h4 class="text-base font-bold text-white">${champ}</h4>
-                                <p class="text-sm text-slate-400 mt-0.5">${stat.games}전 ${stat.wins}승 ${stat.games - stat.wins}패</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center space-x-4 w-1/3 max-w-xs">
-                            <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full rounded-full" style="width: ${cWinRate}%"></div>
-                            </div>
-                            <span class="text-sm font-bold text-slate-300 w-12 text-right">${cWinRate}%</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // 관리자 모달 제어
-        function openAdminModal() {
-            document.getElementById('admin-modal').classList.remove('hidden');
+        function toggleAdminMode() {
             if (isAdmin) {
-                document.getElementById('login-form-area').classList.add('hidden');
-                document.getElementById('logout-form-area').classList.remove('hidden');
+                isAdmin = false;
+                document.getElementById('admin-badge').classList.add('hidden');
+                document.getElementById('admin-toggle-btn').innerText = '🔒 관리자 설정';
+                document.getElementById('record-lock-msg').classList.remove('hidden');
+                document.getElementById('record-form-container').classList.add('hidden');
+                alert('관리자 모드가 해제되었습니다.');
             } else {
-                document.getElementById('login-form-area').classList.remove('hidden');
-                document.getElementById('logout-form-area').classList.add('hidden');
-                document.getElementById('admin-pw-input').value = '';
-                document.getElementById('login-error').classList.add('hidden');
+                document.getElementById('admin-modal').classList.remove('hidden');
+                document.getElementById('admin-pw').value = '';
+                document.getElementById('admin-pw').focus();
             }
         }
 
@@ -695,63 +190,257 @@
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
-        function handleAdminLogin() {
-            const inputPw = document.getElementById('admin-pw-input').value;
-            if (inputPw === adminPassword) {
+        function verifyAdmin() {
+            const pw = document.getElementById('admin-pw').value;
+            if (pw === '1234') {
                 isAdmin = true;
-                localStorage.setItem('scrim_is_admin', 'true');
                 closeAdminModal();
-                updateAdminUI();
-                alert('관리자 모드로 로그인되었습니다.');
+                document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('admin-toggle-btn').innerText = '🔓 로그아웃';
+                document.getElementById('record-lock-msg').classList.add('hidden');
+                document.getElementById('record-form-container').classList.remove('hidden');
+                alert('관리자 모드로 전환되었습니다.');
             } else {
-                document.getElementById('login-error').classList.remove('hidden');
+                alert('비밀번호가 틀렸습니다. (기본: 1234)');
             }
         }
 
-        function handleAdminLogout() {
-            isAdmin = false;
-            localStorage.setItem('scrim_is_admin', 'false');
-            closeAdminModal();
-            updateAdminUI();
-            alert('관리자 모드가 해제되었습니다.');
+        function setupDefaultPlayers() {
+            const blueContainer = document.getElementById('blue-players');
+            const redContainer = document.getElementById('red-players');
+            if (blueContainer.children.length === 0) {
+                ['TOP', 'JUG', 'MID', 'BOT', 'SUP'].forEach(pos => {
+                    addPlayerRow('blue', pos, '', '');
+                    addPlayerRow('red', pos, '', '');
+                });
+            }
         }
 
-        function handleChangePassword() {
-            const newPw = document.getElementById('new-pw-input').value.trim();
-            if (!newPw) {
-                alert('변경할 비밀번호를 입력해주세요.');
+        function addPlayerRow(team, position = 'TOP', name = '', champ = '') {
+            const container = document.getElementById(`${team}-players`);
+            const div = document.createElement('div');
+            div.className = "flex gap-2 items-center bg-gray-900 p-2.5 rounded-xl border border-gray-800";
+            div.innerHTML = `
+                <select class="pos-select bg-gray-950 border border-gray-800 text-xs text-gray-300 rounded-lg px-2 py-1.5 focus:outline-none">
+                    <option value="TOP" ${position==='TOP'?'selected':''}>TOP</option>
+                    <option value="JUG" ${position==='JUG'?'selected':''}>JUG</option>
+                    <option value="MID" ${position==='MID'?'selected':''}>MID</option>
+                    <option value="BOT" ${position==='BOT'?'selected':''}>BOT</option>
+                    <option value="SUP" ${position==='SUP'?'selected':''}>SUP</option>
+                </select>
+                <input type="text" placeholder="소환사명" value="${name}" class="player-name flex-1 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                <input type="text" placeholder="챔피언" value="${champ}" class="player-champ w-24 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-red-400 px-1.5 text-xs">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function saveMatch() {
+            const winner = document.getElementById('match-winner').value;
+            const getTeamData = (teamId) => {
+                const rows = document.querySelectorAll(`#${teamId}-players > div`);
+                let players = [];
+                rows.forEach(row => {
+                    players.push({
+                        pos: row.querySelector('.pos-select').value,
+                        name: row.querySelector('.player-name').value.trim(),
+                        champ: row.querySelector('.player-champ').value.trim()
+                    });
+                });
+                return players;
+            };
+
+            const bluePlayers = getTeamData('blue');
+            const redPlayers = getTeamData('red');
+
+            const match = {
+                id: Date.now(),
+                date: new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                winner,
+                blue: bluePlayers,
+                red: redPlayers
+            };
+
+            matches.unshift(match);
+            localStorage.setItem('lol_scrim_matches', JSON.stringify(matches));
+            
+            updateMatchCount();
+            renderMatches();
+            renderQuickTags();
+            alert('경기가 성공적으로 저장되었습니다!');
+            switchTab('matches');
+        }
+
+        function updateMatchCount() {
+            document.getElementById('match-count').innerText = matches.length;
+            document.getElementById('match-total-count').innerText = matches.length;
+        }
+
+        function getAllPlayersList() {
+            let set = new Set();
+            matches.forEach(m => {
+                m.blue.forEach(p => { if(p.name) set.add(p.name); });
+                m.red.forEach(p => { if(p.name) set.add(p.name); });
+            });
+            return Array.from(set);
+        }
+
+        function renderQuickTags() {
+            const container = document.getElementById('quick-tags');
+            const players = getAllPlayersList();
+            if (players.length === 0) {
+                container.innerHTML = `<span class="text-xs text-gray-500">등록된 소환사가 없습니다. 경기를 등록해보세요!</span>`;
                 return;
             }
-            adminPassword = newPw;
-            localStorage.setItem('scrim_admin_pw', adminPassword);
-            document.getElementById('new-pw-input').value = '';
-            alert('관리자 비밀번호가 성공적으로 변경되었습니다!');
+            container.innerHTML = players.map(name => `
+                <button onclick="searchSpecificPlayer('${name.replace(/'/g, "\\'")}')" class="bg-gray-950 hover:bg-indigo-600/20 text-gray-300 hover:text-indigo-400 border border-gray-800 hover:border-indigo-500/40 text-xs px-3 py-1.5 rounded-xl transition font-medium">
+                    ${name}
+                </button>
+            `).join('');
         }
 
-        function updateAdminUI() {
-            const badge = document.getElementById('admin-badge');
-            const btnText = document.getElementById('admin-btn-text');
-            const lockIcon = document.getElementById('record-lock-icon');
-            const lockBanner = document.getElementById('record-lock-banner');
-            const scrimForm = document.getElementById('scrim-form');
+        function searchSpecificPlayer(name) {
+            document.getElementById('search-input').value = name;
+            searchSummoner();
+        }
 
-            if (isAdmin) {
-                badge.classList.remove('hidden');
-                badge.classList.add('flex');
-                btnText.innerText = '관리자 설정';
-                lockIcon.classList.add('hidden');
-                lockBanner.classList.add('hidden');
-                scrimForm.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-                badge.classList.remove('flex');
-                btnText.innerText = '관리자 로그인';
-                lockIcon.classList.remove('hidden');
-                lockBanner.classList.remove('hidden');
-                scrimForm.classList.add('hidden');
+        function renderMatches() {
+            const listEl = document.getElementById('match-list');
+            if (matches.length === 0) {
+                listEl.innerHTML = `<div class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-500">등록된 매치 기록이 없습니다.</div>`;
+                return;
             }
-            renderMatches();
+
+            listEl.innerHTML = matches.map((m, idx) => `
+                <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-bold text-gray-400">#${matches.length - idx}</span>
+                            <span class="text-xs text-gray-500">${m.date}</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs font-bold px-3 py-1 rounded-full ${m.winner === 'blue' ? 'bg-blue-900/50 text-blue-400 border border-blue-500/30' : 'bg-red-900/50 text-red-400 border border-red-500/30'}">
+                                ${m.winner === 'blue' ? '🔵 블루팀 승리' : '🔴 레드팀 승리'}
+                            </span>
+                            ${isAdmin ? `<button onclick="deleteMatch(${m.id})" class="text-xs text-red-400 hover:text-red-300 bg-red-950/40 border border-red-900/50 px-2 py-1 rounded-lg">삭제</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-blue-950/10 border border-blue-900/20 p-3 rounded-xl">
+                            <div class="text-xs font-bold text-blue-400 mb-2">🔵 블루팀 라인업</div>
+                            <div class="space-y-1">
+                                ${m.blue.map(p => `
+                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
+                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
+                                        <span class="flex-1 px-2">
+                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-blue-400 hover:underline">${p.name}</a>` : '-'}
+                                        </span>
+                                        <span class="text-indigo-400">${p.champ || '-'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="bg-red-950/10 border border-red-900/20 p-3 rounded-xl">
+                            <div class="text-xs font-bold text-red-400 mb-2">🔴 레드팀 라인업</div>
+                            <div class="space-y-1">
+                                ${m.red.map(p => `
+                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
+                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
+                                        <span class="flex-1 px-2">
+                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
+                                        </span>
+                                        <span class="text-indigo-400">${p.champ || '-'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
+
+        function deleteMatch(id) {
+            if (confirm('정말 이 경기 기록을 삭제하시겠습니까?')) {
+                matches = matches.filter(m => m.id !== id);
+                localStorage.setItem('lol_scrim_matches', JSON.stringify(matches));
+                updateMatchCount();
+                renderMatches();
+                renderQuickTags();
+            }
+        }
+
+        function searchSummoner() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const resultEl = document.getElementById('search-result');
+            if (!query) {
+                resultEl.innerHTML = `
+                    <div class="text-center text-gray-500 py-12">
+                        <div class="text-3xl mb-2">🔍</div>
+                        <p class="text-sm">검색할 소환사 닉네임을 입력해 주세요.</p>
+                        <p class="text-xs text-gray-600 mt-1">하단에 등록된 선수 태그를 클릭해도 바로 조회할 수 있습니다.</p>
+                    </div>`;
+                return;
+            }
+
+            let foundGames = [];
+            let champStats = {};
+            let wins = 0, losses = 0;
+
+            matches.forEach(m => {
+                const allPlayers = [...m.blue.map(p => ({...p, team: 'blue'})), ...m.red.map(p => ({...p, team: 'red'}))];
+                const matched = allPlayers.find(p => p.name.toLowerCase().includes(query));
+                if (matched) {
+                    const isWin = (matched.team === m.winner);
+                    if (isWin) wins++; else losses++;
+                    foundGames.push({ ...m, myTeam: matched.team, myChamp: matched.champ, isWin });
+
+                    if (matched.champ) {
+                        if (!champStats[matched.champ]) champStats[matched.champ] = { wins: 0, total: 0 };
+                        champStats[matched.champ].total++;
+                        if (isWin) champStats[matched.champ].wins++;
+                    }
+                }
+            });
+
+            if (foundGames.length === 0) {
+                resultEl.innerHTML = `<div class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-400">"${query}" 소환사의 스크림 전적 기록이 없습니다.</div>`;
+                return;
+            }
+
+            const total = wins + losses;
+            const winRate = Math.round((wins / total) * 100);
+
+            let sortedChamps = Object.entries(champStats).sort((a,b) => b[1].total - a[1].total);
+
+            resultEl.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">${query}</h3>
+                            <p class="text-xs text-gray-400">스크림 통산전적: ${total}전 ${wins}승 ${losses}패</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-2xl font-bold ${winRate >= 50 ? 'text-indigo-400' : 'text-red-400'}">${winRate}%</span>
+                            <p class="text-xs text-gray-500">승률</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
+                        <h4 class="text-sm font-bold text-white">모스트 챔피언</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            ${sortedChamps.length > 0 ? sortedChamps.slice(0, 3).map(([champ, stat]) => `
+                                <div class="bg-gray-950 border border-gray-800 p-3 rounded-xl flex justify-between items-center">
+                                    <span class="text-xs font-bold text-white">${champ}</span>
+                                    <span class="text-xs text-gray-400">${stat.total}판 (${Math.round((stat.wins/stat.total)*100)}%)</span>
+                                </div>
+                            `).join('') : '<div class="text-xs text-gray-500 col-span-3 text-center">기록된 챔피언 정보가 없습니다.</div>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.onload = init;
     </script>
 </body>
 </html>
