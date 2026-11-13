@@ -22,7 +22,7 @@
                 <button onclick="openPasswordModal()" id="pw-change-btn" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
                     🔑 비번 변경
                 </button>
-                <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
+                <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
                     🔒 햇비 설정
                 </button>
             </div>
@@ -87,7 +87,7 @@
                 <div class="flex items-center justify-between border-b border-gray-800 pb-4">
                     <div>
                         <h2 id="form-title" class="text-base font-bold text-white">새 스크림 경기 등록</h2>
-                        <p id="form-desc" class="text-xs text-gray-400">블루팀과 레드팀의 라인업 및 승패 결과를 입력하세요.</p>
+                        <p id="form-desc" class="text-xs text-gray-400">블루팀과 레드팀의 라인업, 티어 및 승패 결과를 입력하세요.</p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <label class="text-xs font-semibold text-gray-400">경기 승리 팀:</label>
@@ -202,6 +202,7 @@
                 document.getElementById('record-form-container').classList.add('hidden');
                 document.getElementById('quick-tags-container').classList.add('hidden');
                 resetRecordForm();
+                renderMatches(); // 관리자 해제 시 전체 매치 수정/삭제 버튼 숨기기 반영
                 alert('햇비 모드가 해제되었습니다.');
             } else {
                 document.getElementById('admin-modal').classList.remove('hidden');
@@ -225,6 +226,7 @@
                 document.getElementById('record-lock-msg').classList.add('hidden');
                 document.getElementById('record-form-container').classList.remove('hidden');
                 document.getElementById('quick-tags-container').classList.remove('hidden');
+                renderMatches(); // 관리자 권한 부여 시 전체 매치 수정/삭제 버튼 표시 반영
                 alert('햇비 모드로 전환되었습니다.');
             } else {
                 alert('비밀번호가 틀렸습니다.');
@@ -258,13 +260,13 @@
             const redContainer = document.getElementById('red-players');
             if (blueContainer.children.length === 0) {
                 ['TOP', 'JUG', 'MID', 'BOT', 'SUP'].forEach(pos => {
-                    addPlayerRow('blue', pos, '', '');
-                    addPlayerRow('red', pos, '', '');
+                    addPlayerRow('blue', pos, '', '', '');
+                    addPlayerRow('red', pos, '', '', '');
                 });
             }
         }
 
-        function addPlayerRow(team, position = 'TOP', name = '', champ = '') {
+        function addPlayerRow(team, position = 'TOP', name = '', tier = '', champ = '') {
             const container = document.getElementById(`${team}-players`);
             const div = document.createElement('div');
             div.className = "flex gap-2 items-center bg-gray-900 p-2.5 rounded-xl border border-gray-800";
@@ -277,7 +279,8 @@
                     <option value="SUP" ${position==='SUP'?'selected':''}>SUP</option>
                 </select>
                 <input type="text" placeholder="소환사명" value="${name}" class="player-name flex-1 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-                <input type="text" placeholder="챔피언" value="${champ}" class="player-champ w-24 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                <input type="text" placeholder="티어 (예: 다이아)" value="${tier}" class="player-tier w-20 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                <input type="text" placeholder="챔피언" value="${champ}" class="player-champ w-20 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
                 <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-red-400 px-1.5 text-xs">✕</button>
             `;
             container.appendChild(div);
@@ -293,6 +296,7 @@
                     players.push({
                         pos: row.querySelector('.pos-select').value,
                         name: row.querySelector('.player-name').value.trim(),
+                        tier: row.querySelector('.player-tier').value.trim(),
                         champ: row.querySelector('.player-champ').value.trim()
                     });
                 });
@@ -344,25 +348,25 @@
             document.getElementById('edit-match-id').value = match.id;
             document.getElementById('match-winner').value = match.winner;
             document.getElementById('form-title').innerText = '스크림 경기 기록 수정';
-            document.getElementById('form-desc').innerText = '기존 경기 정보를 수정합니다.';
+            document.getElementById('form-desc').innerText = '기존 경기 정보 및 티어를 수정합니다.';
             document.getElementById('submit-btn').innerText = '수정 완료하기';
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
 
             // 블루팀 세팅
             const blueContainer = document.getElementById('blue-players');
             blueContainer.innerHTML = '';
-            match.blue.forEach(p => addPlayerRow('blue', p.pos, p.name, p.champ));
+            match.blue.forEach(p => addPlayerRow('blue', p.pos, p.name, p.tier || '', p.champ));
 
             // 레드팀 세팅
             const redContainer = document.getElementById('red-players');
             redContainer.innerHTML = '';
-            match.red.forEach(p => addPlayerRow('red', p.pos, p.name, p.champ));
+            match.red.forEach(p => addPlayerRow('red', p.pos, p.name, p.tier || '', p.champ));
         }
 
         function resetRecordForm() {
             document.getElementById('edit-match-id').value = '';
             document.getElementById('form-title').innerText = '새 스크림 경기 등록';
-            document.getElementById('form-desc').innerText = '블루팀과 레드팀의 라인업 및 승패 결과를 입력하세요.';
+            document.getElementById('form-desc').innerText = '블루팀과 레드팀의 라인업, 티어 및 승패 결과를 입력하세요.';
             document.getElementById('submit-btn').innerText = '경기 기록 저장하기';
             document.getElementById('cancel-edit-btn').classList.add('hidden');
             document.getElementById('blue-players').innerHTML = '';
@@ -436,8 +440,9 @@
                                 ${m.blue.map(p => `
                                     <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
                                         <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                        <span class="flex-1 px-2">
+                                        <span class="flex-1 px-2 flex items-center space-x-2">
                                             ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-blue-400 hover:underline">${p.name}</a>` : '-'}
+                                            ${p.tier ? `<span class="text-[10px] bg-blue-900/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-700/30">${p.tier}</span>` : ''}
                                         </span>
                                         <span class="text-indigo-400">${p.champ || '-'}</span>
                                     </div>
@@ -450,8 +455,9 @@
                                 ${m.red.map(p => `
                                     <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
                                         <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                        <span class="flex-1 px-2">
+                                        <span class="flex-1 px-2 flex items-center space-x-2">
                                             ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
+                                            ${p.tier ? `<span class="text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-700/30">${p.tier}</span>` : ''}
                                         </span>
                                         <span class="text-indigo-400">${p.champ || '-'}</span>
                                     </div>
@@ -488,11 +494,13 @@
             let foundGames = [];
             let champStats = {};
             let wins = 0, losses = 0;
+            let lastKnownTier = '';
 
             matches.forEach((m, idx) => {
                 const allPlayers = [...m.blue.map(p => ({...p, team: 'blue'})), ...m.red.map(p => ({...p, team: 'red'}))];
                 const matched = allPlayers.find(p => p.name.toLowerCase().includes(query));
                 if (matched) {
+                    if (matched.tier) lastKnownTier = matched.tier; // 가장 최근에 입력된 티어 기억
                     const isWin = (matched.team === m.winner);
                     if (isWin) wins++; else losses++;
                     foundGames.push({ ...m, originalIndex: matches.length - idx, myTeam: matched.team, myChamp: matched.champ, isWin });
@@ -521,8 +529,11 @@
                 <div class="space-y-6">
                     <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl flex items-center justify-between">
                         <div>
-                            <h3 class="text-lg font-bold text-white">${query}</h3>
-                            <p class="text-xs text-gray-400">스크림 통산전적: ${total}전 ${wins}승 ${losses}패</p>
+                            <div class="flex items-center space-x-2">
+                                <h3 class="text-lg font-bold text-white">${query}</h3>
+                                ${lastKnownTier ? `<span class="text-xs bg-indigo-950 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-800/50">${lastKnownTier}</span>` : ''}
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">스크림 통산전적: ${total}전 ${wins}승 ${losses}패</p>
                         </div>
                         <div class="text-right">
                             <span class="text-2xl font-bold ${winRate >= 50 ? 'text-indigo-400' : 'text-red-400'}">${winRate}%</span>
@@ -588,8 +599,9 @@
                                                 ${m.blue.map(p => `
                                                     <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
                                                         <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                                        <span class="flex-1 px-2">
+                                                        <span class="flex-1 px-2 flex items-center space-x-2">
                                                             ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-blue-400 hover:underline">${p.name}</a>` : '-'}
+                                                            ${p.tier ? `<span class="text-[10px] bg-blue-900/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-700/30">${p.tier}</span>` : ''}
                                                         </span>
                                                         <span class="text-indigo-400">${p.champ || '-'}</span>
                                                     </div>
@@ -602,8 +614,9 @@
                                                 ${m.red.map(p => `
                                                     <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
                                                         <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                                        <span class="flex-1 px-2">
+                                                        <span class="flex-1 px-2 flex items-center space-x-2">
                                                             ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
+                                                            ${p.tier ? `<span class="text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-700/30">${p.tier}</span>` : ''}
                                                         </span>
                                                         <span class="text-indigo-400">${p.champ || '-'}</span>
                                                     </div>
