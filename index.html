@@ -18,9 +18,14 @@
             <button id="admin-badge" class="hidden bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-lg text-xs font-semibold">
                 🟢 햇비 모드
             </button>
-            <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
-                🔒 햇비 설정
-            </button>
+            <div id="admin-controls" class="flex items-center space-x-2">
+                <button onclick="openPasswordModal()" id="pw-change-btn" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
+                    🔑 비번 변경
+                </button>
+                <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
+                    🔒 햇비 설정
+                </button>
+            </div>
         </div>
         <div class="flex items-center space-x-3">
             <div class="bg-indigo-600 p-2.5 rounded-xl text-white font-bold text-xl">⚡</div>
@@ -132,11 +137,11 @@
 
     </main>
 
-    <!-- 햇비 모드 비밀번호 모달 -->
+    <!-- 햇비 모드 로그인 모달 -->
     <div id="admin-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50">
         <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl w-80 space-y-4">
             <h3 class="text-base font-bold text-white">햇비 모드 로그인</h3>
-            <p class="text-xs text-gray-400">비밀번호를 입력해주세요. (기본: 1234)</p>
+            <p class="text-xs text-gray-400">비밀번호를 입력해주세요.</p>
             <input type="password" id="admin-pw" placeholder="비밀번호 입력" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" onkeypress="if(event.key==='Enter') verifyAdmin()">
             <div class="flex space-x-2 pt-2">
                 <button onclick="closeAdminModal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-semibold transition">취소</button>
@@ -145,9 +150,23 @@
         </div>
     </div>
 
+    <!-- 비밀번호 변경 모달 -->
+    <div id="pw-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50">
+        <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl w-80 space-y-4">
+            <h3 class="text-base font-bold text-white">비밀번호 변경</h3>
+            <p class="text-xs text-gray-400">새로운 비밀번호를 입력해주세요.</p>
+            <input type="password" id="new-pw" placeholder="새 비밀번호 입력" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" onkeypress="if(event.key==='Enter') saveNewPassword()">
+            <div class="flex space-x-2 pt-2">
+                <button onclick="closePasswordModal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-semibold transition">취소</button>
+                <button onclick="saveNewPassword()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-semibold transition">변경</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let isAdmin = false;
         let matches = JSON.parse(localStorage.getItem('lol_scrim_matches') || '[]');
+        let currentAdminPw = localStorage.getItem('lol_scrim_admin_pw') || '1234';
 
         function init() {
             updateMatchCount();
@@ -174,6 +193,7 @@
             if (isAdmin) {
                 isAdmin = false;
                 document.getElementById('admin-badge').classList.add('hidden');
+                document.getElementById('pw-change-btn').classList.add('hidden');
                 document.getElementById('admin-toggle-btn').innerText = '🔒 햇비 설정';
                 document.getElementById('record-lock-msg').classList.remove('hidden');
                 document.getElementById('record-form-container').classList.add('hidden');
@@ -192,18 +212,41 @@
 
         function verifyAdmin() {
             const pw = document.getElementById('admin-pw').value;
-            if (pw === '1234') {
+            if (pw === currentAdminPw) {
                 isAdmin = true;
                 closeAdminModal();
                 document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('pw-change-btn').classList.remove('hidden');
                 document.getElementById('admin-toggle-btn').innerText = '🔓 로그아웃';
                 document.getElementById('record-lock-msg').classList.add('hidden');
                 document.getElementById('record-form-container').classList.remove('hidden');
                 document.getElementById('quick-tags-container').classList.remove('hidden');
                 alert('햇비 모드로 전환되었습니다.');
             } else {
-                alert('비밀번호가 틀렸습니다. (기본: 1234)');
+                alert('비밀번호가 틀렸습니다.');
             }
+        }
+
+        function openPasswordModal() {
+            document.getElementById('pw-modal').classList.remove('hidden');
+            document.getElementById('new-pw').value = '';
+            document.getElementById('new-pw').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('pw-modal').classList.add('hidden');
+        }
+
+        function saveNewPassword() {
+            const newPw = document.getElementById('new-pw').value.trim();
+            if (!newPw) {
+                alert('변경할 비밀번호를 입력해주세요.');
+                return;
+            }
+            currentAdminPw = newPw;
+            localStorage.setItem('lol_scrim_admin_pw', newPw);
+            closePasswordModal();
+            alert('비밀번호가 성공적으로 변경되었습니다!');
         }
 
         function setupDefaultPlayers() {
@@ -386,13 +429,13 @@
             let champStats = {};
             let wins = 0, losses = 0;
 
-            matches.forEach(m => {
+            matches.forEach((m, idx) => {
                 const allPlayers = [...m.blue.map(p => ({...p, team: 'blue'})), ...m.red.map(p => ({...p, team: 'red'}))];
                 const matched = allPlayers.find(p => p.name.toLowerCase().includes(query));
                 if (matched) {
                     const isWin = (matched.team === m.winner);
                     if (isWin) wins++; else losses++;
-                    foundGames.push({ ...m, myTeam: matched.team, myChamp: matched.champ, isWin });
+                    foundGames.push({ ...m, originalIndex: matches.length - idx, myTeam: matched.team, myChamp: matched.champ, isWin });
 
                     if (matched.champ) {
                         if (!champStats[matched.champ]) champStats[matched.champ] = { wins: 0, total: 0 };
@@ -411,6 +454,8 @@
             const winRate = Math.round((wins / total) * 100);
 
             let sortedChamps = Object.entries(champStats).sort((a,b) => b[1].total - a[1].total);
+            let topChamps = sortedChamps.slice(0, 5);
+            let restChamps = sortedChamps.slice(5);
 
             resultEl.innerHTML = `
                 <div class="space-y-6">
@@ -427,13 +472,81 @@
                     
                     <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
                         <h4 class="text-sm font-bold text-white">모스트 챔피언</h4>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            ${sortedChamps.length > 0 ? sortedChamps.slice(0, 3).map(([champ, stat]) => `
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            ${topChamps.length > 0 ? topChamps.map(([champ, stat]) => `
                                 <div class="bg-gray-950 border border-gray-800 p-3 rounded-xl flex justify-between items-center">
                                     <span class="text-xs font-bold text-white">${champ}</span>
                                     <span class="text-xs text-gray-400">${stat.total}판 (${Math.round((stat.wins/stat.total)*100)}%)</span>
                                 </div>
                             `).join('') : '<div class="text-xs text-gray-500 col-span-3 text-center">기록된 챔피언 정보가 없습니다.</div>'}
+                        </div>
+
+                        ${restChamps.length > 0 ? `
+                            <div class="pt-2">
+                                <button onclick="document.getElementById('more-champs').classList.toggle('hidden'); this.innerText = this.innerText.includes('더보기') ? '접기 ▲' : '더보기 ▼';" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs py-2 rounded-xl transition font-medium border border-gray-700">
+                                    더보기 ▼
+                                </button>
+                                <div id="more-champs" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-3">
+                                    ${restChamps.map(([champ, stat]) => `
+                                        <div class="bg-gray-950 border border-gray-800 p-3 rounded-xl flex justify-between items-center">
+                                            <span class="text-xs font-bold text-white">${champ}</span>
+                                            <span class="text-xs text-gray-400">${stat.total}판 (${Math.round((stat.wins/stat.total)*100)}%)</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- 검색된 선수의 매치 히스토리 -->
+                    <div class="space-y-4 pt-4">
+                        <h4 class="text-sm font-bold text-white">참여 매치 기록</h4>
+                        <div class="space-y-4">
+                            ${foundGames.map(m => `
+                                <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
+                                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <span class="text-xs font-bold text-gray-400">#${m.originalIndex}</span>
+                                            <span class="text-xs text-gray-500">${m.date}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-bold px-3 py-1 rounded-full ${m.winner === 'blue' ? 'bg-blue-900/50 text-blue-400 border border-blue-500/30' : 'bg-red-900/50 text-red-400 border border-red-500/30'}">
+                                                ${m.winner === 'blue' ? '🔵 블루팀 승리' : '🔴 레드팀 승리'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="bg-blue-950/10 border border-blue-900/20 p-3 rounded-xl">
+                                            <div class="text-xs font-bold text-blue-400 mb-2">🔵 블루팀 라인업</div>
+                                            <div class="space-y-1">
+                                                ${m.blue.map(p => `
+                                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
+                                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
+                                                        <span class="flex-1 px-2">
+                                                            ${p.name ? `<a href="#" onclick="searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-blue-400 hover:underline">${p.name}</a>` : '-'}
+                                                        </span>
+                                                        <span class="text-indigo-400">${p.champ || '-'}</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                        <div class="bg-red-950/10 border border-red-900/20 p-3 rounded-xl">
+                                            <div class="text-xs font-bold text-red-400 mb-2">🔴 레드팀 라인업</div>
+                                            <div class="space-y-1">
+                                                ${m.red.map(p => `
+                                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
+                                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
+                                                        <span class="flex-1 px-2">
+                                                            ${p.name ? `<a href="#" onclick="searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
+                                                        </span>
+                                                        <span class="text-indigo-400">${p.champ || '-'}</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 </div>
