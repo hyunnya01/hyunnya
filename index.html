@@ -89,7 +89,7 @@
                 <div class="flex items-center justify-between border-b border-gray-800 pb-4">
                     <div>
                         <h2 id="form-title" class="text-base font-bold text-white">새 스크림 경기 등록</h2>
-                        <p id="form-desc" class="text-xs text-gray-400">블루팀과 레드팀의 라인업, 티어 및 승패 결과를 입력하세요.</p>
+                        <p id="form-desc" class="text-xs text-gray-400">블루팀과 레드팀의 라인업을 입력하세요. (소환사명 / 티어 / 챔피언 순으로 한 칸에 적어주세요)</p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <label class="text-xs font-semibold text-gray-400">경기 승리 팀:</label>
@@ -173,7 +173,6 @@
 
     <script>
         // ==========================================
-        // ★ 아래 두 칸에 JSONBin에서 복사한 값을 넣어주세요! ★
         const JSONBIN_BIN_ID = '6af79b72ac6210605a860fe2'; 
         const JSONBIN_API_KEY = '$2a$10$4h1/4WtTMrCmSQu5c2YXnOjpZLfkprZ3.VwShvQZPICKGyPN14.hy';
         // ==========================================
@@ -331,10 +330,18 @@
             }
         }
 
+        // 2번 방식: 통합 입력칸(닉네임 / 티어 / 챔피언) 적용
         function addPlayerRow(team, position = 'TOP', name = '', tier = '', champ = '') {
             const container = document.getElementById(`${team}-players`);
             const div = document.createElement('div');
             div.className = "flex gap-2 items-center bg-gray-900 p-2.5 rounded-xl border border-gray-800";
+            
+            // 기존 데이터가 있을 경우 합쳐서 표시, 없으면 빈칸
+            let combinedValue = '';
+            if (name || tier || champ) {
+                combinedValue = `${name || ''} / ${tier || ''} / ${champ || ''}`;
+            }
+
             div.innerHTML = `
                 <select class="pos-select bg-gray-950 border border-gray-800 text-xs text-gray-300 rounded-lg px-2 py-1.5 focus:outline-none">
                     <option value="TOP" ${position==='TOP'?'selected':''}>TOP</option>
@@ -343,9 +350,7 @@
                     <option value="BOT" ${position==='BOT'?'selected':''}>BOT</option>
                     <option value="SUP" ${position==='SUP'?'selected':''}>SUP</option>
                 </select>
-                <input type="text" placeholder="소환사명" value="${name}" class="player-name flex-1 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-                <input type="text" placeholder="티어" value="${tier}" class="player-tier w-16 bg-gray-950 border border-gray-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
-                <input type="text" placeholder="챔피언" value="${champ}" class="player-champ w-20 bg-gray-950 border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500">
+                <input type="text" placeholder="소환사명 / 티어 / 챔피언 (예: 페이커 / 챌린저 / 아리)" value="${combinedValue}" class="player-combined flex-1 bg-gray-950 border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-gray-600">
                 <button onclick="this.parentElement.remove()" class="text-gray-500 hover:text-red-400 px-1.5 text-xs">✕</button>
             `;
             container.appendChild(div);
@@ -354,16 +359,21 @@
         async function saveMatch() {
             const editId = document.getElementById('edit-match-id').value;
             const winner = document.getElementById('match-winner').value;
+            
             const getTeamData = (teamId) => {
                 const rows = document.querySelectorAll(`#${teamId}-players > div`);
                 let players = [];
                 rows.forEach(row => {
-                    players.push({
-                        pos: row.querySelector('.pos-select').value,
-                        name: row.querySelector('.player-name').value.trim(),
-                        tier: row.querySelector('.player-tier').value.trim(),
-                        champ: row.querySelector('.player-champ').value.trim()
-                    });
+                    const pos = row.querySelector('.pos-select').value;
+                    const combinedText = row.querySelector('.player-combined').value.trim();
+                    
+                    // 슬래시(/) 기준으로 쪼개서 각각 저장 (기존 데이터 구조 완벽 호환)
+                    let parts = combinedText.split('/').map(s => s.trim());
+                    let name = parts[0] || '';
+                    let tier = parts[1] || '';
+                    let champ = parts[2] || '';
+
+                    players.push({ pos, name, tier, champ });
                 });
                 return players;
             };
@@ -412,7 +422,7 @@
             document.getElementById('edit-match-id').value = match.id;
             document.getElementById('match-winner').value = match.winner;
             document.getElementById('form-title').innerText = '스크림 경기 기록 수정';
-            document.getElementById('form-desc').innerText = '기존 경기 정보 및 티어를 수정합니다.';
+            document.getElementById('form-desc').innerText = '기존 경기 정보 및 라인업을 수정합니다.';
             document.getElementById('submit-btn').innerText = '수정 완료 및 클라우드 저장';
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
 
@@ -428,7 +438,7 @@
         function resetRecordForm() {
             document.getElementById('edit-match-id').value = '';
             document.getElementById('form-title').innerText = '새 스크림 경기 등록';
-            document.getElementById('form-desc').innerText = '블루팀과 레드팀의 라인업, 티어 및 승패 결과를 입력하세요.';
+            document.getElementById('form-desc').innerText = '블루팀과 레드팀의 라인업을 입력하세요. (소환사명 / 티어 / 챔피언 순)';
             document.getElementById('submit-btn').innerText = '클라우드에 저장하기';
             document.getElementById('cancel-edit-btn').classList.add('hidden');
             document.getElementById('blue-players').innerHTML = '';
@@ -674,7 +684,7 @@
                                         <div class="bg-red-950/10 border border-red-900/20 p-3 rounded-xl">
                                             <div class="text-xs font-bold text-red-400 mb-2">🔴 레드팀 라인업</div>
                                             <div class="space-y-1">
-                                                ${m.red.map(p => `
+                                                ${m.red.php ? '' : m.red.map(p => `
                                                     <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
                                                         <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
                                                         <span class="flex-1 px-2 flex items-center space-x-2">
