@@ -157,7 +157,7 @@
         // ==========================================
         const JSONBIN_BIN_ID = '6af79b72ac6210605a860fe2'; 
         const JSONBIN_API_KEY = '$2a$10$4h1/4WtTMrCmSQu5c2YXnOjpZLfkprZ3.VwShvQZPICKGyPN14.hy';
-        const MAX_MATCH_BLOCKS = 6; // 최대 동시 입력 경기 수 (6칸)
+        const MAX_MATCH_BLOCKS = 6;
         // ==========================================
 
         let isAdmin = false;
@@ -681,13 +681,22 @@
                         </div>
                     </div>
                     
-                    <!-- 🛡️ 포지션(라인)별 모든 챔피언 통계 -->
+                    <!-- 🛡️ 포지션(라인)별 챔피언 통계 (승률 높은 순 정렬) -->
                     <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
-                        <h4 class="text-sm font-bold text-white">🛡️ 포지션(라인)별 전체 챔피언 통계</h4>
+                        <h4 class="text-sm font-bold text-white">🛡️ 포지션(라인)별 챔피언 통계 (승률순)</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             ${sortedPositions.map(([pos, pStat]) => {
                                 const pWinRate = Math.round((pStat.wins / pStat.total) * 100);
-                                const sortedPosChamps = Object.entries(pStat.champs).sort((a, b) => b[1].total - a[1].total);
+                                
+                                // 🌟 챔피언 정렬 조건: 1순위 승률 높은 순(내림차순), 2순위 판수 많은 순(내림차순)
+                                const sortedPosChamps = Object.entries(pStat.champs).sort((a, b) => {
+                                    const rateA = Math.round((a[1].wins / a[1].total) * 100);
+                                    const rateB = Math.round((b[1].wins / b[1].total) * 100);
+                                    if (rateA !== rateB) {
+                                        return rateB - rateA; // 승률 높은 순
+                                    }
+                                    return b[1].total - a[1].total; // 승률이 같으면 판수 많은 순
+                                });
                                 
                                 return `
                                     <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl space-y-3">
@@ -699,13 +708,16 @@
                                             <span class="text-xs font-bold ${pWinRate >= 50 ? 'text-indigo-400' : 'text-red-400'}">${pWinRate}% 승률</span>
                                         </div>
                                         <div class="space-y-1.5">
-                                            <div class="text-[11px] text-gray-400 font-medium">플레이한 모든 챔피언</div>
+                                            <div class="text-[11px] text-gray-400 font-medium">플레이한 모든 챔피언 (승률순 정렬)</div>
                                             <div class="flex flex-wrap gap-1.5">
-                                                ${sortedPosChamps.length > 0 ? sortedPosChamps.map(([champ, cStat]) => `
-                                                    <span class="bg-gray-900 border border-gray-800 text-gray-300 text-xs px-2.5 py-1 rounded-lg">
-                                                        <strong class="text-white">${champ}</strong> <span class="text-gray-400 text-[11px]">(${cStat.total}판 ${Math.round((cStat.wins/cStat.total)*100)}%)</span>
-                                                    </span>
-                                                `).join('') : '<span class="text-xs text-gray-500">기록된 챔피언 정보 없음</span>'}
+                                                ${sortedPosChamps.length > 0 ? sortedPosChamps.map(([champ, cStat]) => {
+                                                    const cWinRate = Math.round((cStat.wins / cStat.total) * 100);
+                                                    return `
+                                                        <span class="bg-gray-900 border border-gray-800 text-gray-300 text-xs px-2.5 py-1 rounded-lg">
+                                                            <strong class="text-white">${champ}</strong> <span class="text-gray-400 text-[11px]">(${cStat.total}판 ${cWinRate}%)</span>
+                                                        </span>
+                                                    `;
+                                                }).join('') : '<span class="text-xs text-gray-500">기록된 챔피언 정보 없음</span>'}
                                             </div>
                                         </div>
                                     </div>
