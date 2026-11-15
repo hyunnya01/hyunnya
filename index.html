@@ -79,7 +79,7 @@
             </div>
         </section>
 
-        <!-- 2. 경기 기록 탭 (햇비 모드 전용 - 최대 3경기 동시 입력 지원) -->
+        <!-- 2. 경기 기록 탭 (햇비 모드 전용 - 최대 3세트 동시 입력 지원) -->
         <section id="section-record" class="hidden space-y-6">
             <div id="record-lock-msg" class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-400">
                 🔒 경기 기록 등록 및 수정은 <span class="text-indigo-400 font-semibold">햇비 모드</span>에서만 가능합니다. 우측 상단 '햇비 설정'을 눌러 로그인해주세요.
@@ -168,7 +168,6 @@
             await loadFromCloud();
         }
 
-        // 경기 기록 블록 생성 (기본 3개, 수정 시 1개)
         function renderMatchBlocks(count = 3) {
             const wrapper = document.getElementById('match-blocks-wrapper');
             wrapper.innerHTML = '';
@@ -427,7 +426,6 @@
                     const bluePlayers = getTeamData(i, 'blue');
                     const redPlayers = getTeamData(i, 'red');
 
-                    // 비어있는 경기 블록은 건너뜀
                     if (isBlockEmpty(bluePlayers, redPlayers)) continue;
 
                     newMatches.push({
@@ -444,7 +442,6 @@
                     return;
                 }
 
-                // 입력한 순서대로(1경기 -> 2경기 -> 3경기) 최신 목록에 반영
                 newMatches.reverse().forEach(m => matches.unshift(m));
             }
 
@@ -619,7 +616,7 @@
             }
 
             let foundGames = [];
-            let champStats = {};
+            let posStats = {}; 
             let wins = 0, losses = 0;
             let lastKnownTier = '';
 
@@ -630,12 +627,21 @@
                     if (matched.tier) lastKnownTier = matched.tier;
                     const isWin = (matched.team === m.winner);
                     if (isWin) wins++; else losses++;
-                    foundGames.push({ ...m, originalIndex: matches.length - idx, myTeam: matched.team, myChamp: matched.champ, isWin });
+                    foundGames.push({ ...m, originalIndex: matches.length - idx, myTeam: matched.team, myChamp: matched.champ, myPos: matched.pos, isWin });
+
+                    const pos = matched.pos || 'ETC';
+                    if (!posStats[pos]) {
+                        posStats[pos] = { wins: 0, total: 0, champs: {} };
+                    }
+                    posStats[pos].total++;
+                    if (isWin) posStats[pos].wins++;
 
                     if (matched.champ) {
-                        if (!champStats[matched.champ]) champStats[matched.champ] = { wins: 0, total: 0 };
-                        champStats[matched.champ].total++;
-                        if (isWin) champStats[matched.champ].wins++;
+                        if (!posStats[pos].champs[matched.champ]) {
+                            posStats[pos].champs[matched.champ] = { wins: 0, total: 0 };
+                        }
+                        posStats[pos].champs[matched.champ].total++;
+                        if (isWin) posStats[pos].champs[matched.champ].wins++;
                     }
                 }
             });
@@ -648,9 +654,15 @@
             const total = wins + losses;
             const winRate = Math.round((wins / total) * 100);
 
-            let sortedChamps = Object.entries(champStats).sort((a,b) => b[1].total - a[1].total);
-            let topChamps = sortedChamps.slice(0, 5);
-            let restChamps = sortedChamps.slice(5);
+            const posOrder = ['TOP', 'JUG', 'MID', 'BOT', 'SUP'];
+            let sortedPositions = Object.entries(posStats).sort((a, b) => {
+                let idxA = posOrder.indexOf(a[0]);
+                let idxB = posOrder.indexOf(b[0]);
+                if (idxA === -1) idxA = 99;
+                if (idxB === -1) idxB = 99;
+                if (idxA !== idxB) return idxA - idxB;
+                return b[1].total - a[1].total;
+            });
 
             resultEl.innerHTML = `
                 <div class="space-y-6">
@@ -668,32 +680,38 @@
                         </div>
                     </div>
                     
+                    <!-- 🛡️ 포지션(라인)별 모든 챔피언 통계 -->
                     <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
-                        <h4 class="text-sm font-bold text-white">모스트 챔피언</h4>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                            ${topChamps.length > 0 ? topChamps.map(([champ, stat]) => `
-                                <div class="bg-gray-950 border border-gray-800 p-3 rounded-xl flex justify-between items-center">
-                                    <span class="text-xs font-bold text-white">${champ}</span>
-                                    <span class="text-xs text-gray-400">${stat.total}판 (${Math.round((stat.wins/stat.total)*100)}%)</span>
-                                </div>
-                            `).join('') : '<div class="text-xs text-gray-500 col-span-3 text-center">기록된 챔피언 정보가 없습니다.</div>'}
-                        </div>
-
-                        ${restChamps.length > 0 ? `
-                            <div class="pt-2">
-                                <button onclick="document.getElementById('more-champs').classList.toggle('hidden'); this.innerText = this.innerText.includes('더보기') ? '접기 ▲' : '더보기 ▼';" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs py-2 rounded-xl transition font-medium border border-gray-700">
-                                    더보기 ▼
-                                </button>
-                                <div id="more-champs" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-3">
-                                    ${restChamps.map(([champ, stat]) => `
-                                        <div class="bg-gray-950 border border-gray-800 p-3 rounded-xl flex justify-between items-center">
-                                            <span class="text-xs font-bold text-white">${champ}</span>
-                                            <span class="text-xs text-gray-400">${stat.total}판 (${Math.round((stat.wins/stat.total)*100)}%)</span>
+                        <h4 class="text-sm font-bold text-white">🛡️ 포지션(라인)별 전체 챔피언 통계</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${sortedPositions.map(([pos, pStat]) => {
+                                const pWinRate = Math.round((pStat.wins / pStat.total) * 100);
+                                // 플레이한 모든 챔피언을 판수 많은 순으로 정렬하여 전부 표시
+                                const sortedPosChamps = Object.entries(pStat.champs).sort((a, b) => b[1].total - a[1].total);
+                                
+                                return `
+                                    <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl space-y-3">
+                                        <div class="flex justify-between items-center border-b border-gray-800/80 pb-2">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold px-2.5 py-0.5 rounded-md">${pos}</span>
+                                                <span class="text-xs text-gray-300 font-semibold">${pStat.total}전 ${pStat.wins}승 ${pStat.total - pStat.wins}패</span>
+                                            </div>
+                                            <span class="text-xs font-bold ${pWinRate >= 50 ? 'text-indigo-400' : 'text-red-400'}">${pWinRate}% 승률</span>
                                         </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
+                                        <div class="space-y-1.5">
+                                            <div class="text-[11px] text-gray-400 font-medium">플레이한 모든 챔피언</div>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                ${sortedPosChamps.length > 0 ? sortedPosChamps.map(([champ, cStat]) => `
+                                                    <span class="bg-gray-900 border border-gray-800 text-gray-300 text-xs px-2.5 py-1 rounded-lg">
+                                                        <strong class="text-white">${champ}</strong> <span class="text-gray-400 text-[11px]">(${cStat.total}판 ${Math.round((cStat.wins/cStat.total)*100)}%)</span>
+                                                    </span>
+                                                `).join('') : '<span class="text-xs text-gray-500">기록된 챔피언 정보 없음</span>'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
 
                     <div class="space-y-4 pt-4">
@@ -730,28 +748,28 @@
                                                             ${p.tier ? `<span class="text-[10px] bg-blue-900/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-700/30">${p.tier}</span>` : ''}
                                                         </span>
                                                         <span class="text-indigo-400">${p.champ || '-'}</span>
-                                                    </div>
-                                                `).join('')}
-                                            </div>
-                                        </div>
-                                        <div class="bg-red-950/10 border border-red-900/20 p-3 rounded-xl">
-                                            <div class="text-xs font-bold text-red-400 mb-2">🔴 레드팀 라인업</div>
-                                            <div class="space-y-1">
-                                                ${m.red.map(p => `
-                                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
-                                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                                        <span class="flex-1 px-2 flex items-center space-x-2">
-                                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
-                                                            ${p.tier ? `<span class="text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-700/30">${p.tier}</span>` : ''}
-                                                        </span>
-                                                        <span class="text-indigo-400">${p.champ || '-'}</span>
-                                                    </div>
-                                                `).join('')}
-                                            </div>
-                                        </div>
+                                <</div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="bg-red-950/10 border border-red-900/20 p-3 rounded-xl">
+                            <div class="text-xs font-bold text-red-400 mb-2">🔴 레드팀 라인업</div>
+                            <div class="space-y-1">
+                                ${m.red.map(p => `
+                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
+                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
+                                        <span class="flex-1 px-2 flex items-center space-x-2">
+                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
+                                            ${p.tier ? `<span class="text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-700/30">${p.tier}</span>` : ''}
+                                        </span>
+                                        <span class="text-indigo-400">${p.champ || '-'}</span>
                                     </div>
-                                </div>
-                            `).join('')}
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
                         </div>
                     </div>
                 </div>
