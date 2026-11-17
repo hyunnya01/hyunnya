@@ -3,152 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>멸망전 스크림 기록</title>
+    <title>🐻‍❄️ 멸망전 스크림 기록 🐻‍❄️</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/sun-typeface/SUITE/fonts/static/woff2/SUITE.css" rel="stylesheet">
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #0b0f19; color: #f3f4f6; font-size: 15.5px; }
+        body { 
+            font-family: 'SUITE', sans-serif; 
+            background-color: #FFFDF9; 
+            color: #3D352E; 
+            font-size: 17px; 
+            transition: background-color 0.3s, color 0.3s;
+        }
+        body.admin-dark-record-active {
+            background-color: #0b0f19 !important;
+            color: #f3f4f6 !important;
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #FAF5EE; }
+        ::-webkit-scrollbar-thumb { background: #E5D7C6; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #D4C1AA; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body id="main-body" class="min-h-screen flex flex-col">
 
     <!-- 상단 헤더 -->
-    <header class="bg-gray-900 border-b border-gray-800 px-6 py-5 flex flex-col items-center justify-center space-y-3 relative">
-        <div class="absolute right-6 top-5 flex items-center space-x-3">
-            <span id="sync-status" class="text-xs text-gray-400 hidden sm:inline">☁️ 클라우드 연결됨</span>
-            <button id="admin-badge" class="hidden bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-lg text-xs font-semibold">
+    <header id="site-header" class="bg-[#FFF9F2] border-b border-[#F2E6D8] px-6 py-6 flex flex-col items-center justify-center space-y-3 relative shadow-xs transition-colors duration-300">
+        <div class="sm:absolute right-6 top-5 flex items-center space-x-2.5">
+            <span id="sync-status" class="text-sm font-medium text-[#8C7A6B] hidden sm:inline">☁️ 클라우드 연결됨</span>
+            <button id="admin-badge" class="hidden bg-emerald-100 text-emerald-700 border border-emerald-300 px-3.5 py-1.5 rounded-full text-sm font-bold shadow-2xs">
                 🟢 햇비 모드
             </button>
             <div id="admin-controls" class="flex items-center space-x-2">
-                <button onclick="openPasswordModal()" id="pw-change-btn" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
+                <button onclick="openPasswordModal()" id="pw-change-btn" class="hidden bg-white hover:bg-[#FAF3EA] text-[#6B5B4E] px-3.5 py-1.5 rounded-full text-sm font-semibold border border-[#E8D9C8] transition shadow-2xs">
                     🔑 비번 변경
                 </button>
-                <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-gray-700 transition">
+                <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-white hover:bg-[#FAF3EA] text-[#6B5B4E] px-4 py-1.5 rounded-full text-sm font-semibold border border-[#E8D9C8] transition shadow-2xs">
                     🔒 햇비 설정
                 </button>
             </div>
         </div>
-        <div class="flex items-center space-x-3">
-            <div class="bg-indigo-600 p-2.5 rounded-xl text-white font-bold text-xl">⚡</div>
-            <div class="text-center">
-                <h1 class="text-xl font-bold text-white tracking-wide">멸망전 스크림 기록</h1>
-                <p class="text-xs text-gray-400 mt-0.5">멸망전 파이팅 해봐요 -햇비-</p>
-            </div>
+        <div class="text-center pt-1">
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">🐻‍❄️ 멸망전 스크림 기록 🐻‍❄️</h1>
+            <p class="text-sm sm:text-base font-medium mt-1.5 opacity-80">멸망전 파이팅 해봐요 -햇비-</p>
         </div>
     </header>
 
-    <!-- 탭 네비게이션 -->
-    <nav class="flex border-b border-gray-800 bg-gray-900/50 px-6 justify-center space-x-8">
-        <button onclick="switchTab('search')" id="tab-search" class="py-3.5 text-sm font-semibold border-b-2 border-indigo-500 text-indigo-400 transition">
+    <!-- 탭 네비게이션 (순서: 검색 -> 경기 기록 -> 대회 참가팀 현황 -> 전체 매치) -->
+    <nav id="site-nav" class="flex flex-wrap border-b border-[#F2E6D8] bg-white/80 backdrop-blur-xs px-4 justify-center gap-2 sm:gap-8 sticky top-0 z-30 transition-colors duration-300">
+        <button onclick="switchTab('search')" id="tab-search" class="py-4 px-2 text-base font-bold border-b-3 border-[#FF8A7A] text-[#E86A58] transition">
             🔍 전적 검색 & 모스트
         </button>
-        <button onclick="switchTab('record')" id="tab-record" class="py-3.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition">
+        <button onclick="switchTab('record')" id="tab-record" class="py-4 px-2 text-base font-bold border-b-3 border-transparent text-[#8C7A6B] hover:text-[#3D352E] transition">
             ➕ 경기 기록
         </button>
-        <button onclick="switchTab('matches')" id="tab-matches" class="py-3.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 transition">
+        <button onclick="switchTab('teams')" id="tab-teams" class="py-4 px-2 text-base font-bold border-b-3 border-transparent text-[#8C7A6B] hover:text-[#3D352E] transition">
+            🏆 대회 참가팀 현황
+        </button>
+        <button onclick="switchTab('matches')" id="tab-matches" class="py-4 px-2 text-base font-bold border-b-3 border-transparent text-[#8C7A6B] hover:text-[#3D352E] transition">
             📋 전체 매치 (<span id="match-count">0</span>)
         </button>
     </nav>
 
     <!-- 메인 컨텐츠 영역 -->
-    <main class="flex-1 max-w-6xl w-full mx-auto p-6 space-y-6">
+    <main class="flex-1 max-w-6xl w-full mx-auto p-5 sm:p-7 space-y-6">
 
         <!-- 1. 전적 검색 탭 -->
         <section id="section-search" class="space-y-6">
-            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-3">
+            <div id="search-card-box" class="bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-3.5 shadow-sm transition-colors duration-300">
                 <div class="flex justify-between items-center">
-                    <label class="text-xs font-semibold text-gray-400">소환사 검색 (롤닉#태그 또는 닉네임)</label>
-                    <button onclick="loadFromCloud()" class="text-xs text-indigo-400 hover:text-indigo-300 transition">🔄 최신 데이터 새로고침</button>
+                    <label id="search-label-text" class="text-sm font-bold text-[#7A6859]">소환사 검색 (닉네임 일부만 입력해도 태그까지 검색돼요!)</label>
+                    <button onclick="loadFromCloud()" class="text-sm font-semibold text-[#E86A58] hover:text-[#D15543] bg-[#FFF4F2] px-3 py-1.5 rounded-full transition">🔄 새로고침</button>
                 </div>
                 <div class="flex gap-3">
-                    <input type="text" id="search-input" placeholder="예: 칭찬양파#안자람 또는 칭찬양파" class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-white placeholder-gray-500" onkeypress="if(event.key==='Enter') searchSummoner()">
-                    <button onclick="searchSummoner()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl text-sm font-semibold transition">검색</button>
+                    <input type="text" id="search-input" placeholder="예: 안정형 또는 안정형 원딜러#안절부절" class="flex-1 bg-[#FAF6F0] border border-[#E8D9C8] rounded-2xl px-4 py-3.5 text-base focus:outline-none focus:border-[#FF8A7A] text-[#3D352E] placeholder-[#B5A495]">
+                    <button onclick="searchSummoner()" class="bg-[#FF8A7A] hover:bg-[#F47665] text-white px-7 py-3.5 rounded-2xl text-base font-bold transition shadow-sm cursor-pointer">검색</button>
                 </div>
-                <p class="text-xs text-gray-500">등록된 소환사의 닉네임 일부만 입력해도 검색됩니다.</p>
             </div>
 
             <!-- 빠른 소환사 태그 목록 (햇비 모드 전용) -->
-            <div id="quick-tags-container" class="hidden bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-3">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">등록된 소환사 목록 (햇비 모드 전용)</h3>
+            <div id="quick-tags-container" class="hidden bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-3 shadow-sm">
+                <h3 class="text-sm font-bold text-[#7A6859]">🐾 등록된 소환사 목록 (햇비 모드 전용)</h3>
                 <div id="quick-tags" class="flex flex-wrap gap-2"></div>
             </div>
 
-            <div id="search-result" class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-500">
-                <div class="text-3xl mb-2">🔍</div>
-                <p class="text-sm">검색할 소환사 닉네임을 입력해 주세요.</p>
+            <!-- 검색 결과 영역 -->
+            <div id="search-result" class="bg-white border border-[#F0E4D4] p-12 rounded-3xl text-center text-[#9C8878] shadow-sm transition-colors duration-300">
+                <div class="text-4xl mb-3">🐻‍❄️</div>
+                <p class="text-base font-medium">검색할 소환사 닉네임을 입력해 주세요!</p>
             </div>
         </section>
 
-        <!-- 2. 경기 기록 탭 (햇비 모드 전용 - 최대 6세트 동시 입력 지원) -->
+        <!-- 2. 경기 기록 탭 (햇비 모드 로그인 시 눈이 편안한 다크모드 적용 + 최대 16세트) -->
         <section id="section-record" class="hidden space-y-6">
-            <div id="record-lock-msg" class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-400">
-                🔒 경기 기록 등록 및 수정은 <span class="text-indigo-400 font-semibold">햇비 모드</span>에서만 가능합니다. 우측 상단 '햇비 설정'을 눌러 로그인해주세요.
+            <div id="record-lock-msg" class="bg-white border border-[#F0E4D4] p-12 rounded-3xl text-center text-[#7A6859] shadow-sm">
+                🔒 경기 기록 등록 및 수정은 <span class="text-[#E86A58] font-bold">햇비 모드</span>에서만 가능합니다. 우측 상단 '햇비 설정'을 눌러 로그인해주세요!
             </div>
             
             <div id="record-form-container" class="hidden space-y-6">
+                <!-- A / B 스크림 구분 선택 탭 -->
+                <div id="rec-type-tab-box" class="bg-white border border-[#F0E4D4] p-3 rounded-3xl flex gap-3 shadow-sm transition-colors duration-300">
+                    <button type="button" onclick="setRecordType('before')" id="rec-type-before" class="flex-1 py-3.5 rounded-2xl text-base font-extrabold bg-[#FF8A7A] text-white shadow-xs transition">
+                        🌱 확정 이전 (A 스크림 기록)
+                    </button>
+                    <button type="button" onclick="setRecordType('after')" id="rec-type-after" class="flex-1 py-3.5 rounded-2xl text-base font-extrabold bg-[#FAF6F0] text-[#7A6859] hover:bg-[#F3ECE2] transition">
+                        🔥 확정 이후 (B 스크림 기록 · KDA 포함)
+                    </button>
+                </div>
+
                 <!-- 상단 안내 헤더 -->
-                <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div id="rec-header-box" class="bg-white border border-[#F0E4D4] p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm transition-colors duration-300">
                     <div>
-                        <h2 id="form-title" class="text-base font-bold text-white">새 스크림 경기 등록 (최대 6세트 동시 입력)</h2>
-                        <p id="form-desc" class="text-xs text-gray-400 mt-1">한 번에 최대 6경기까지 입력할 수 있습니다. <span class="text-indigo-400 font-medium">내용을 입력한 경기만 자동으로 저장되며, 빈 칸은 무시됩니다.</span></p>
+                        <h2 id="form-title" class="text-lg font-extrabold text-[#3D352E]">🌱 확정 이전 경기 등록 (최대 16세트 동시 입력)</h2>
+                        <p id="form-desc" class="text-sm text-[#8C7A6B] mt-1">한 번에 최대 16경기까지 입력할 수 있어요. <span class="text-[#E86A58] font-bold">내용을 입력한 경기만 자동으로 저장됩니다!</span></p>
                     </div>
                     <div class="flex gap-2 shrink-0">
-                        <button id="cancel-edit-btn" onclick="resetRecordForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition">수정 취소</button>
-                        <button id="submit-btn" onclick="saveMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition shadow-lg shadow-indigo-600/20">클라우드에 저장하기</button>
+                        <button id="cancel-edit-btn" onclick="resetRecordForm()" class="hidden bg-[#FAF6F0] hover:bg-[#EFE6D8] text-[#6B5B4E] font-bold px-4 py-3 rounded-2xl text-sm border border-[#E8D9C8] transition">수정 취소</button>
+                        <button id="submit-btn" onclick="saveMatch()" class="bg-[#FF8A7A] hover:bg-[#F47665] text-white font-bold px-6 py-3 rounded-2xl text-base transition shadow-sm">클라우드에 저장하기</button>
                     </div>
                 </div>
 
                 <input type="hidden" id="edit-match-id" value="">
 
-                <!-- 6개의 경기 입력 블록 컨테이너 -->
+                <!-- 16개의 경기 입력 블록 컨테이너 -->
                 <div id="match-blocks-wrapper" class="space-y-6"></div>
 
                 <!-- 하단 저장 버튼 -->
                 <div class="flex justify-end gap-2 pt-2">
-                    <button id="cancel-edit-btn-bottom" onclick="resetRecordForm()" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold px-6 py-3 rounded-xl text-sm transition">수정 취소</button>
-                    <button id="submit-btn-bottom" onclick="saveMatch()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-indigo-600/20">클라우드에 저장하기</button>
+                    <button id="cancel-edit-btn-bottom" onclick="resetRecordForm()" class="hidden bg-[#FAF6F0] hover:bg-[#EFE6D8] text-[#6B5B4E] font-bold px-6 py-3.5 rounded-2xl text-base border border-[#E8D9C8] transition">수정 취소</button>
+                    <button id="submit-btn-bottom" onclick="saveMatch()" class="bg-[#FF8A7A] hover:bg-[#F47665] text-white font-bold px-7 py-3.5 rounded-2xl text-base transition shadow-sm">클라우드에 저장하기</button>
                 </div>
             </div>
         </section>
 
-        <!-- 3. 전체 매치 탭 -->
-        <section id="section-matches" class="hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-base font-bold text-white">전체 매치 히스토리</h2>
-                <div class="flex items-center space-x-4">
-                    <button onclick="loadFromCloud()" class="text-xs text-indigo-400 hover:text-indigo-300 transition">🔄 새로고침</button>
-                    <span class="text-xs text-gray-400">총 <span id="match-total-count">0</span>경기 기록됨</span>
+        <!-- 3. 대회 참가팀 현황 탭 -->
+        <section id="section-teams" class="hidden space-y-6">
+            <div class="bg-white border border-[#F0E4D4] p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-extrabold text-[#3D352E]">🏆 대회 참가팀 현황</h2>
+                    <p class="text-sm text-[#8C7A6B] mt-1">팀원 닉네임을 클릭하면 해당 선수의 스크림 전적을 바로 확인할 수 있어요!</p>
+                </div>
+                <button onclick="loadFromCloud()" class="self-start sm:self-auto text-sm font-semibold text-[#E86A58] bg-[#FFF4F2] hover:bg-[#FFE8E4] px-4 py-2 rounded-full transition">🔄 최신 팀 불러오기</button>
+            </div>
+
+            <!-- 햇비 모드 전용: 팀 추가/수정 폼 -->
+            <div id="team-admin-panel" class="hidden bg-[#FFF9F2] border-2 border-[#FFD5CE] p-6 rounded-3xl space-y-5 shadow-sm">
+                <div class="flex justify-between items-center border-b border-[#F2E2D4] pb-3">
+                    <h3 id="team-form-title" class="text-lg font-extrabold text-[#E86A58]">✨ 새 참가 팀 등록 (햇비 모드)</h3>
+                    <button id="cancel-team-edit-btn" onclick="resetTeamForm()" class="hidden text-sm bg-white border border-[#E8D9C8] text-[#7A6859] px-3.5 py-1.5 rounded-full font-semibold">수정 취소</button>
+                </div>
+                <input type="hidden" id="edit-team-id" value="">
+                
+                <div>
+                    <label class="block text-sm font-bold text-[#6B5B4E] mb-1.5">팀 이름</label>
+                    <input type="text" id="team-name-input" placeholder="예: 1팀 (북극곰단)" class="w-full bg-white border border-[#E8D9C8] rounded-2xl px-4 py-3 text-base focus:outline-none focus:border-[#FF8A7A]">
+                </div>
+
+                <div class="space-y-2.5">
+                    <label class="block text-sm font-bold text-[#6B5B4E]">팀원 5명 입력 (라인 / 티어 / 롤닉#태그)</label>
+                    <div id="team-members-inputs" class="space-y-2.5"></div>
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button onclick="saveTeam()" class="bg-[#FF8A7A] hover:bg-[#F47665] text-white font-bold px-6 py-3 rounded-2xl text-base transition shadow-sm">클라우드에 팀 저장하기</button>
                 </div>
             </div>
-            <div id="match-list" class="space-y-4">
-                <div class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-500">데이터를 불러오는 중입니다...</div>
+
+            <!-- 참가 팀 목록 -->
+            <div id="teams-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-full bg-white border border-[#F0E4D4] p-12 rounded-3xl text-center text-[#9C8878]">등록된 참가 팀이 없습니다.</div>
+            </div>
+        </section>
+
+        <!-- 4. 전체 매치 탭 -->
+        <section id="section-matches" class="hidden space-y-6">
+            <div class="bg-white border border-[#F0E4D4] p-5 rounded-3xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <h2 class="text-lg font-extrabold text-[#3D352E]">📋 전체 매치 히스토리</h2>
+                    <span class="text-sm font-bold bg-[#FFF4F2] text-[#E86A58] px-3 py-1 rounded-full">총 <span id="match-total-count">0</span>경기</span>
+                </div>
+                
+                <!-- 통합 / 확정 이전 / 확정 이후 필터 버튼 -->
+                <div class="flex items-center gap-2 bg-[#FAF6F0] p-1.5 rounded-2xl border border-[#E8D9C8]">
+                    <button onclick="setMatchListFilter('all')" id="ml-filter-all" class="px-3.5 py-1.5 rounded-xl text-sm font-bold bg-white text-[#E86A58] shadow-2xs transition">통합</button>
+                    <button onclick="setMatchListFilter('before')" id="ml-filter-before" class="px-3.5 py-1.5 rounded-xl text-sm font-bold text-[#8C7A6B] hover:text-[#3D352E] transition">🌱 확정 이전</button>
+                    <button onclick="setMatchListFilter('after')" id="ml-filter-after" class="px-3.5 py-1.5 rounded-xl text-sm font-bold text-[#8C7A6B] hover:text-[#3D352E] transition">🔥 확정 이후</button>
+                </div>
+            </div>
+
+            <div id="match-list" class="space-y-5">
+                <div class="bg-white border border-[#F0E4D4] p-12 rounded-3xl text-center text-[#9C8878]">데이터를 불러오는 중입니다...</div>
             </div>
         </section>
 
     </main>
 
     <!-- 햇비 모드 로그인 모달 -->
-    <div id="admin-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50">
-        <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl w-80 space-y-4">
-            <h3 class="text-base font-bold text-white">햇비 모드 로그인</h3>
-            <p class="text-xs text-gray-400">비밀번호를 입력해주세요.</p>
-            <input type="password" id="admin-pw" placeholder="비밀번호 입력" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" onkeypress="if(event.key==='Enter') verifyAdmin()">
-            <div class="flex space-x-2 pt-2">
-                <button onclick="closeAdminModal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-semibold transition">취소</button>
-                <button onclick="verifyAdmin()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-semibold transition">확인</button>
+    <div id="admin-modal" class="fixed inset-0 bg-[#3D352E]/40 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white border border-[#F0E4D4] p-7 rounded-3xl w-full max-w-sm space-y-4 shadow-xl">
+            <h3 class="text-xl font-extrabold text-[#3D352E]">🐻‍❄️ 햇비 모드 로그인</h3>
+            <p class="text-sm text-[#8C7A6B]">관리자 비밀번호를 입력해주세요.</p>
+            <input type="password" id="admin-pw" placeholder="비밀번호 입력" class="w-full bg-[#FAF6F0] border border-[#E8D9C8] rounded-2xl px-4 py-3 text-base text-[#3D352E] focus:outline-none focus:border-[#FF8A7A]" onkeypress="if(event.key==='Enter') verifyAdmin()">
+            <div class="flex space-x-2.5 pt-2">
+                <button onclick="closeAdminModal()" class="flex-1 bg-[#FAF6F0] hover:bg-[#EFE6D8] text-[#7A6859] py-3 rounded-2xl text-sm font-bold transition">취소</button>
+                <button onclick="verifyAdmin()" class="flex-1 bg-[#FF8A7A] hover:bg-[#F47665] text-white py-3 rounded-2xl text-sm font-bold transition">확인</button>
             </div>
         </div>
     </div>
 
     <!-- 비밀번호 변경 모달 -->
-    <div id="pw-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-50">
-        <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl w-80 space-y-4">
-            <h3 class="text-base font-bold text-white">비밀번호 변경</h3>
-            <p class="text-xs text-gray-400">새로운 비밀번호를 입력해주세요.</p>
-            <input type="password" id="new-pw" placeholder="새 비밀번호 입력" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" onkeypress="if(event.key==='Enter') saveNewPassword()">
-            <div class="flex space-x-2 pt-2">
-                <button onclick="closePasswordModal()" class="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 py-2.5 rounded-xl text-xs font-semibold transition">취소</button>
-                <button onclick="saveNewPassword()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-xl text-xs font-semibold transition">변경</button>
+    <div id="pw-modal" class="fixed inset-0 bg-[#3D352E]/40 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white border border-[#F0E4D4] p-7 rounded-3xl w-full max-w-sm space-y-4 shadow-xl">
+            <h3 class="text-xl font-extrabold text-[#3D352E]">🔑 비밀번호 변경</h3>
+            <p class="text-sm text-[#8C7A6B]">새로운 비밀번호를 입력해주세요.</p>
+            <input type="password" id="new-pw" placeholder="새 비밀번호 입력" class="w-full bg-[#FAF6F0] border border-[#E8D9C8] rounded-2xl px-4 py-3 text-base text-[#3D352E] focus:outline-none focus:border-[#FF8A7A]" onkeypress="if(event.key==='Enter') saveNewPassword()">
+            <div class="flex space-x-2.5 pt-2">
+                <button onclick="closePasswordModal()" class="flex-1 bg-[#FAF6F0] hover:bg-[#EFE6D8] text-[#7A6859] py-3 rounded-2xl text-sm font-bold transition">취소</button>
+                <button onclick="saveNewPassword()" class="flex-1 bg-[#FF8A7A] hover:bg-[#F47665] text-white py-3 rounded-2xl text-sm font-bold transition">변경</button>
             </div>
         </div>
     </div>
@@ -157,103 +227,30 @@
         // ==========================================
         const JSONBIN_BIN_ID = '6af79b72ac6210605a860fe2'; 
         const JSONBIN_API_KEY = '$2a$10$4h1/4WtTMrCmSQu5c2YXnOjpZLfkprZ3.VwShvQZPICKGyPN14.hy';
-        const MAX_MATCH_BLOCKS = 6;
+        const MAX_MATCH_BLOCKS = 16;
         // ==========================================
 
         let isAdmin = false;
         let matches = [];
+        let playerNotes = {}; 
+        let confirmedTeams = []; 
         let currentAdminPw = localStorage.getItem('lol_scrim_admin_pw') || '1234';
+
+        let currentRecordType = 'before'; 
+        let currentSearchFilter = 'all'; 
+        let currentMatchListFilter = 'all'; 
+        let currentSelectedSummoner = ''; 
+        let selectedChampFilter = null; 
+        let activeTabName = 'search';
 
         async function init() {
             renderMatchBlocks(MAX_MATCH_BLOCKS);
+            renderTeamMemberInputs();
             await loadFromCloud();
-        }
-
-        function renderMatchBlocks(count = MAX_MATCH_BLOCKS) {
-            const wrapper = document.getElementById('match-blocks-wrapper');
-            wrapper.innerHTML = '';
-
-            for (let i = 1; i <= count; i++) {
-                const block = document.createElement('div');
-                block.id = `match-block-${i}`;
-                block.className = "bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-5";
-                block.innerHTML = `
-                    <div class="flex items-center justify-between border-b border-gray-800 pb-4">
-                        <div class="flex items-center space-x-2.5">
-                            <span class="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold px-2.5 py-1 rounded-lg">
-                                ${count === 1 ? '수정 대상 경기' : `${i}번째 경기 (선택)`}
-                            </span>
-                            <span class="text-xs text-gray-500 hidden sm:inline">소환사명 / 티어 / 챔피언 순으로 입력</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <label class="text-xs font-semibold text-gray-400">승리 팀:</label>
-                            <select id="match-winner-${i}" class="bg-gray-950 border border-gray-800 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500">
-                                <option value="blue">🔵 블루팀 승리</option>
-                                <option value="red">🔴 레드팀 승리</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- 블루팀 입력 -->
-                        <div class="bg-gray-950 border border-blue-900/40 p-4 rounded-xl space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h3 class="text-sm font-bold text-blue-400">🔵 블루팀 (Blue Side)</h3>
-                                <button type="button" onclick="addPlayerRow(${i}, 'blue')" class="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs px-2.5 py-1.5 rounded-lg border border-blue-500/30 transition">+ 선수 추가</button>
-                            </div>
-                            <div id="blue-players-${i}" class="space-y-2.5"></div>
-                        </div>
-
-                        <!-- 레드팀 입력 -->
-                        <div class="bg-gray-950 border border-red-900/40 p-4 rounded-xl space-y-3">
-                            <div class="flex justify-between items-center">
-                                <h3 class="text-sm font-bold text-red-400">🔴 레드팀 (Red Side)</h3>
-                                <button type="button" onclick="addPlayerRow(${i}, 'red')" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs px-2.5 py-1.5 rounded-lg border border-red-500/30 transition">+ 선수 추가</button>
-                            </div>
-                            <div id="red-players-${i}" class="space-y-2.5"></div>
-                        </div>
-                    </div>
-                `;
-                wrapper.appendChild(block);
-
-                ['TOP', 'JUG', 'MID', 'BOT', 'SUP'].forEach(pos => {
-                    addPlayerRow(i, 'blue', pos, '', '', '');
-                    addPlayerRow(i, 'red', pos, '', '', '');
-                });
-            }
-        }
-
-        function addPlayerRow(blockIdx, team, position = 'TOP', name = '', tier = '', champ = '') {
-            const container = document.getElementById(`${team}-players-${blockIdx}`);
-            const div = document.createElement('div');
-            div.className = "flex gap-2 items-center bg-gray-900 p-2.5 rounded-xl border border-gray-800";
-            
-            let combinedValue = '';
-            if (name || tier || champ) {
-                combinedValue = `${name || ''} / ${tier || ''} / ${champ || ''}`;
-            }
-
-            div.innerHTML = `
-                <select class="pos-select bg-gray-950 border border-gray-800 text-xs text-gray-300 rounded-lg px-2 py-1.5 focus:outline-none">
-                    <option value="TOP" ${position==='TOP'?'selected':''}>TOP</option>
-                    <option value="JUG" ${position==='JUG'?'selected':''}>JUG</option>
-                    <option value="MID" ${position==='MID'?'selected':''}>MID</option>
-                    <option value="BOT" ${position==='BOT'?'selected':''}>BOT</option>
-                    <option value="SUP" ${position==='SUP'?'selected':''}>SUP</option>
-                </select>
-                <input type="text" placeholder="소환사명 / 티어 / 챔피언" value="${combinedValue}" class="player-combined flex-1 bg-gray-950 border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 placeholder-gray-600">
-                <button type="button" onclick="this.parentElement.remove()" class="text-gray-500 hover:text-red-400 px-1.5 text-xs">✕</button>
-            `;
-            container.appendChild(div);
         }
 
         async function loadFromCloud() {
             const statusEl = document.getElementById('sync-status');
-            if (JSONBIN_BIN_ID.includes('여기에')) {
-                statusEl.innerText = '⚠️ 클라우드 키 미설정';
-                statusEl.className = 'text-xs text-amber-400';
-                return;
-            }
             statusEl.innerText = '⏳ 동기화 중...';
             try {
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
@@ -261,16 +258,26 @@
                 });
                 if (!res.ok) throw new Error('불러오기 실패');
                 const data = await res.json();
-                matches = data.record.matches || [];
+                const record = data.record || {};
+                
+                matches = record.matches || [];
+                playerNotes = record.notes || {};
+                confirmedTeams = record.teams || [];
+
                 updateMatchCount();
                 renderMatches();
                 renderQuickTags();
+                renderTeams();
+                if (currentSelectedSummoner) {
+                    renderSummonerDetail(currentSelectedSummoner);
+                }
+
                 statusEl.innerText = '☁️ 클라우드 동기화 완료';
-                statusEl.className = 'text-xs text-emerald-400';
+                statusEl.className = 'text-sm font-semibold text-emerald-600 hidden sm:inline';
             } catch (e) {
                 console.error(e);
                 statusEl.innerText = '❌ 동기화 오류';
-                statusEl.className = 'text-xs text-red-400';
+                statusEl.className = 'text-sm font-semibold text-rose-500 hidden sm:inline';
             }
         }
 
@@ -287,15 +294,19 @@
                         'Content-Type': 'application/json',
                         'X-Master-Key': JSONBIN_API_KEY
                     },
-                    body: JSON.stringify({ matches: matches })
+                    body: JSON.stringify({ 
+                        matches: matches,
+                        notes: playerNotes,
+                        teams: confirmedTeams
+                    })
                 });
                 if (!res.ok) throw new Error('저장 실패');
                 statusEl.innerText = '☁️ 클라우드 저장 완료';
-                statusEl.className = 'text-xs text-emerald-400';
+                statusEl.className = 'text-sm font-semibold text-emerald-600 hidden sm:inline';
                 return true;
             } catch (e) {
                 console.error(e);
-                alert('클라우드 저장 중 오류가 발생했습니다. API 키와 Bin ID를 확인해주세요.');
+                alert('클라우드 저장 중 오류가 발생했습니다.');
                 statusEl.innerText = '❌ 저장 실패';
                 return false;
             } finally {
@@ -304,17 +315,57 @@
         }
 
         function switchTab(tabName) {
-            ['search', 'record', 'matches'].forEach(t => {
+            activeTabName = tabName;
+            ['search', 'teams', 'record', 'matches'].forEach(t => {
                 document.getElementById(`section-${t}`).classList.add('hidden');
-                document.getElementById(`tab-${t}`).classList.remove('border-indigo-500', 'text-indigo-400');
-                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-gray-400');
+                document.getElementById(`tab-${t}`).classList.remove('border-[#FF8A7A]', 'text-[#E86A58]');
+                document.getElementById(`tab-${t}`).classList.add('border-transparent', 'text-[#8C7A6B]');
             });
             document.getElementById(`section-${tabName}`).classList.remove('hidden');
-            document.getElementById(`tab-${tabName}`).classList.add('border-indigo-500', 'text-indigo-400');
-            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-gray-400');
+            document.getElementById(`tab-${tabName}`).classList.add('border-[#FF8A7A]', 'text-[#E86A58]');
+            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-[#8C7A6B]');
+
+            applyThemeState();
 
             if (tabName === 'matches') renderMatches();
             if (tabName === 'search') renderQuickTags();
+            if (tabName === 'teams') renderTeams();
+        }
+
+        function applyThemeState() {
+            const body = document.getElementById('main-body');
+            const header = document.getElementById('site-header');
+            const nav = document.getElementById('site-nav');
+            const searchBox = document.getElementById('search-card-box');
+            const searchLabel = document.getElementById('search-label-text');
+            const recTabBox = document.getElementById('rec-type-tab-box');
+            const recHeaderBox = document.getElementById('rec-header-box');
+
+            if (isAdmin && activeTabName === 'record') {
+                body.classList.add('admin-dark-record-active');
+                header.className = 'bg-[#111827] border-b border-gray-800 px-6 py-6 flex flex-col items-center justify-center space-y-3 relative shadow-xs transition-colors duration-300 text-white';
+                nav.className = 'flex flex-wrap border-b border-gray-800 bg-[#111827]/90 backdrop-blur-xs px-4 justify-center gap-2 sm:gap-8 sticky top-0 z-30 transition-colors duration-300';
+                if (searchBox) searchBox.className = 'bg-gray-900 border border-gray-800 p-6 rounded-3xl space-y-3.5 shadow-sm transition-colors duration-300 text-white';
+                if (searchLabel) searchLabel.className = 'text-sm font-bold text-gray-300';
+                if (recTabBox) recTabBox.className = 'bg-gray-900 border border-gray-800 p-3 rounded-3xl flex gap-3 shadow-sm transition-colors duration-300';
+                if (recHeaderBox) recHeaderBox.className = 'bg-gray-900 border border-gray-800 p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm transition-colors duration-300 text-white';
+                
+                document.querySelectorAll('#match-blocks-wrapper > div').forEach(block => {
+                    block.className = 'bg-gray-900 border border-gray-800 p-6 rounded-3xl space-y-5 shadow-sm text-white';
+                });
+            } else {
+                body.classList.remove('admin-dark-record-active');
+                header.className = 'bg-[#FFF9F2] border-b border-[#F2E6D8] px-6 py-6 flex flex-col items-center justify-center space-y-3 relative shadow-xs transition-colors duration-300 text-[#3D352E]';
+                nav.className = 'flex flex-wrap border-b border-[#F2E6D8] bg-white/80 backdrop-blur-xs px-4 justify-center gap-2 sm:gap-8 sticky top-0 z-30 transition-colors duration-300';
+                if (searchBox) searchBox.className = 'bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-3.5 shadow-sm transition-colors duration-300 text-[#3D352E]';
+                if (searchLabel) searchLabel.className = 'text-sm font-bold text-[#7A6859]';
+                if (recTabBox) recTabBox.className = 'bg-white border border-[#F0E4D4] p-3 rounded-3xl flex gap-3 shadow-sm transition-colors duration-300';
+                if (recHeaderBox) recHeaderBox.className = 'bg-white border border-[#F0E4D4] p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm transition-colors duration-300 text-[#3D352E]';
+                
+                document.querySelectorAll('#match-blocks-wrapper > div').forEach(block => {
+                    block.className = 'bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-5 shadow-sm text-[#3D352E]';
+                });
+            }
         }
 
         function toggleAdminMode() {
@@ -326,8 +377,12 @@
                 document.getElementById('record-lock-msg').classList.remove('hidden');
                 document.getElementById('record-form-container').classList.add('hidden');
                 document.getElementById('quick-tags-container').classList.add('hidden');
+                document.getElementById('team-admin-panel').classList.add('hidden');
                 resetRecordForm();
+                resetTeamForm();
                 renderMatches();
+                renderTeams();
+                applyThemeState();
                 alert('햇비 모드가 해제되었습니다.');
             } else {
                 document.getElementById('admin-modal').classList.remove('hidden');
@@ -336,9 +391,7 @@
             }
         }
 
-        function closeAdminModal() {
-            document.getElementById('admin-modal').classList.add('hidden');
-        }
+        function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
 
         function verifyAdmin() {
             const pw = document.getElementById('admin-pw').value;
@@ -351,8 +404,11 @@
                 document.getElementById('record-lock-msg').classList.add('hidden');
                 document.getElementById('record-form-container').classList.remove('hidden');
                 document.getElementById('quick-tags-container').classList.remove('hidden');
+                document.getElementById('team-admin-panel').classList.remove('hidden');
                 renderMatches();
-                alert('햇비 모드로 전환되었습니다.');
+                renderTeams();
+                applyThemeState();
+                alert('🐻‍❄️ 햇비 모드로 전환되었습니다!');
             } else {
                 alert('비밀번호가 틀렸습니다.');
             }
@@ -363,21 +419,135 @@
             document.getElementById('new-pw').value = '';
             document.getElementById('new-pw').focus();
         }
-
-        function closePasswordModal() {
-            document.getElementById('pw-modal').classList.add('hidden');
-        }
-
+        function closePasswordModal() { document.getElementById('pw-modal').classList.add('hidden'); }
         function saveNewPassword() {
             const newPw = document.getElementById('new-pw').value.trim();
-            if (!newPw) {
-                alert('변경할 비밀번호를 입력해주세요.');
-                return;
-            }
+            if (!newPw) return alert('변경할 비밀번호를 입력해주세요.');
             currentAdminPw = newPw;
             localStorage.setItem('lol_scrim_admin_pw', newPw);
             closePasswordModal();
             alert('비밀번호가 성공적으로 변경되었습니다!');
+        }
+
+        function setRecordType(type) {
+            currentRecordType = type;
+            const btnBefore = document.getElementById('rec-type-before');
+            const btnAfter = document.getElementById('rec-type-after');
+            const titleEl = document.getElementById('form-title');
+            const editId = document.getElementById('edit-match-id').value;
+
+            if (type === 'before') {
+                btnBefore.className = 'flex-1 py-3.5 rounded-2xl text-base font-extrabold bg-[#FF8A7A] text-white shadow-xs transition';
+                btnAfter.className = 'flex-1 py-3.5 rounded-2xl text-base font-extrabold bg-[#FAF6F0] text-[#7A6859] hover:bg-[#F3ECE2] transition';
+                if (!editId) titleEl.innerText = '🌱 확정 이전 경기 등록 (최대 16세트 동시 입력)';
+            } else {
+                btnAfter.className = 'flex-1 py-3.5 rounded-2xl text-base font-extrabold bg-[#FF8A7A] text-white shadow-xs transition';
+                btnBefore.className = 'flex-1 py-3.5 rounded-2xl text-base font-extrabold bg-[#FAF6F0] text-[#7A6859] hover:bg-[#F3ECE2] transition';
+                if (!editId) titleEl.innerText = '🔥 확정 이후 경기 등록 · KDA 포함 (최대 16세트)';
+            }
+
+            document.querySelectorAll('.kda-input-box').forEach(el => {
+                if (type === 'after') el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+        }
+
+        function renderMatchBlocks(count = MAX_MATCH_BLOCKS) {
+            const wrapper = document.getElementById('match-blocks-wrapper');
+            wrapper.innerHTML = '';
+
+            for (let i = 1; i <= count; i++) {
+                const block = document.createElement('div');
+                block.id = `match-block-${i}`;
+                block.className = (isAdmin && activeTabName === 'record')
+                    ? "bg-gray-900 border border-gray-800 p-6 rounded-3xl space-y-5 shadow-sm text-white"
+                    : "bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-5 shadow-sm text-[#3D352E]";
+                
+                block.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-700/50 pb-4">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="bg-[#FFF0ED] text-[#E86A58] border border-[#FFD5CE] text-sm font-extrabold px-3 py-1 rounded-xl">
+                                ${count === 1 ? '수정 대상 경기' : `${i}번째 경기 (선택)`}
+                            </span>
+                            <span class="text-sm opacity-80 hidden sm:inline">소환사명#태그 / 티어 / 챔피언 순으로 입력</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <label class="text-sm font-bold">승리 팀:</label>
+                            <select id="match-winner-${i}" class="bg-gray-800 border border-gray-700 text-white text-sm font-bold rounded-xl px-3.5 py-2 focus:outline-none focus:border-[#FF8A7A]">
+                                <option value="blue">🔵 블루팀 승리</option>
+                                <option value="red">🔴 레드팀 승리</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- 블루팀 입력 -->
+                        <div class="bg-blue-950/30 border border-blue-900/40 p-4 rounded-2xl space-y-3">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-base font-extrabold text-blue-400">🔵 블루팀 (Blue Side)</h3>
+                                <button type="button" onclick="addPlayerRow(${i}, 'blue')" class="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-500/30 transition">+ 선수 추가</button>
+                            </div>
+                            <div id="blue-players-${i}" class="space-y-2.5"></div>
+                        </div>
+
+                        <!-- 레드팀 입력 -->
+                        <div class="bg-red-950/30 border border-red-900/40 p-4 rounded-2xl space-y-3">
+                            <div class="flex justify-between items-center">
+                                <h3 class="text-base font-extrabold text-red-400">🔴 레드팀 (Red Side)</h3>
+                                <button type="button" onclick="addPlayerRow(${i}, 'red')" class="bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-red-500/30 transition">+ 선수 추가</button>
+                            </div>
+                            <div id="red-players-${i}" class="space-y-2.5"></div>
+                        </div>
+                    </div>
+                `;
+                wrapper.appendChild(block);
+
+                ['TOP', 'JUG', 'MID', 'BOT', 'SUP'].forEach(pos => {
+                    addPlayerRow(i, 'blue', pos, '', '', '', '');
+                    addPlayerRow(i, 'red', pos, '', '', '', '');
+                });
+            }
+        }
+
+        function addPlayerRow(blockIdx, team, position = 'TOP', name = '', tier = '', champ = '', kda = '') {
+            const container = document.getElementById(`${team}-players-${blockIdx}`);
+            const div = document.createElement('div');
+            div.className = "bg-gray-950/80 p-3 rounded-2xl border border-gray-800 space-y-2 shadow-2xs";
+            
+            let combinedValue = '';
+            if (name || tier || champ) {
+                combinedValue = `${name || ''} / ${tier || ''} / ${champ || ''}`;
+            }
+
+            const isAfter = currentRecordType === 'after';
+
+            div.innerHTML = `
+                <div class="flex gap-2 items-center">
+                    <select class="pos-select bg-gray-900 border border-gray-700 text-sm font-bold text-gray-200 rounded-xl px-2.5 py-2 focus:outline-none">
+                        <option value="TOP" ${position==='TOP'?'selected':''}>TOP</option>
+                        <option value="JUG" ${position==='JUG'?'selected':''}>JUG</option>
+                        <option value="MID" ${position==='MID'?'selected':''}>MID</option>
+                        <option value="BOT" ${position==='BOT'?'selected':''}>BOT</option>
+                        <option value="SUP" ${position==='SUP'?'selected':''}>SUP</option>
+                    </select>
+                    <input type="text" placeholder="소환사명#태그 / 티어 / 챔피언" value="${combinedValue}" class="player-combined flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-[#FF8A7A] placeholder-gray-500">
+                    <button type="button" onclick="this.closest('.bg-gray-950\\/80').remove()" class="text-gray-500 hover:text-rose-400 px-1.5 text-sm font-bold">✕</button>
+                </div>
+                <div class="kda-input-box ${isAfter ? '' : 'hidden'} flex items-center gap-2 pl-1">
+                    <span class="text-xs font-bold text-[#E86A58] bg-rose-950/60 border border-rose-800/50 px-2 py-1 rounded-lg shrink-0">K/D/A (선택)</span>
+                    <input type="text" placeholder="예: 2/1/2 (킬/데스/어시)" value="${kda || ''}" class="player-kda flex-1 bg-gray-900 border border-gray-700 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-[#FF8A7A] placeholder-gray-500">
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function parseKdaText(rawKda) {
+            if (!rawKda || !rawKda.trim()) return '';
+            const parts = rawKda.split('/').map(s => s.trim()).filter(s => s !== '');
+            if (parts.length === 3) {
+                return `${parts[0]}/${parts[1]}/${parts[2]}`;
+            }
+            return rawKda.trim();
         }
 
         async function saveMatch() {
@@ -389,13 +559,15 @@
                 rows.forEach(row => {
                     const pos = row.querySelector('.pos-select').value;
                     const combinedText = row.querySelector('.player-combined').value.trim();
+                    const rawKda = row.querySelector('.player-kda') ? row.querySelector('.player-kda').value.trim() : '';
                     
                     let parts = combinedText.split('/').map(s => s.trim());
                     let name = parts[0] || '';
                     let tier = parts[1] || '';
                     let champ = parts[2] || '';
+                    let kda = currentRecordType === 'after' ? parseKdaText(rawKda) : '';
 
-                    players.push({ pos, name, tier, champ });
+                    players.push({ pos, name, tier, champ, kda });
                 });
                 return players;
             };
@@ -413,6 +585,7 @@
 
                 const targetIndex = matches.findIndex(m => m.id == editId);
                 if (targetIndex !== -1) {
+                    matches[targetIndex].recordType = currentRecordType;
                     matches[targetIndex].winner = winner;
                     matches[targetIndex].blue = bluePlayers;
                     matches[targetIndex].red = redPlayers;
@@ -432,6 +605,7 @@
                     newMatches.push({
                         id: baseTime + i,
                         date: dateStr,
+                        recordType: currentRecordType,
                         winner,
                         blue: bluePlayers,
                         red: redPlayers
@@ -458,19 +632,18 @@
         }
 
         function editMatch(id) {
-            if (!isAdmin) {
-                alert('햇비 모드에서만 수정할 수 있습니다.');
-                return;
-            }
+            if (!isAdmin) return alert('햇비 모드에서만 수정할 수 있습니다.');
             const match = matches.find(m => m.id == id);
             if (!match) return;
 
             switchTab('record');
+            const mType = match.recordType || 'before';
+            setRecordType(mType);
             renderMatchBlocks(1);
 
             document.getElementById('edit-match-id').value = match.id;
             document.getElementById('match-winner-1').value = match.winner;
-            document.getElementById('form-title').innerText = '스크림 경기 기록 수정';
+            document.getElementById('form-title').innerText = '✏️ 스크림 경기 기록 수정';
             document.getElementById('form-desc').innerText = '기존 경기 정보 및 라인업을 수정합니다.';
             document.getElementById('submit-btn').innerText = '수정 완료 및 클라우드 저장';
             document.getElementById('submit-btn-bottom').innerText = '수정 완료 및 클라우드 저장';
@@ -479,22 +652,157 @@
 
             const blueContainer = document.getElementById('blue-players-1');
             blueContainer.innerHTML = '';
-            match.blue.forEach(p => addPlayerRow(1, 'blue', p.pos, p.name, p.tier || '', p.champ));
+            match.blue.forEach(p => addPlayerRow(1, 'blue', p.pos, p.name, p.tier || '', p.champ, p.kda || ''));
 
             const redContainer = document.getElementById('red-players-1');
             redContainer.innerHTML = '';
-            match.red.forEach(p => addPlayerRow(1, 'red', p.pos, p.name, p.tier || '', p.champ));
+            match.red.forEach(p => addPlayerRow(1, 'red', p.pos, p.name, p.tier || '', p.champ, p.kda || ''));
         }
 
         function resetRecordForm() {
             document.getElementById('edit-match-id').value = '';
-            document.getElementById('form-title').innerText = '새 스크림 경기 등록 (최대 6세트 동시 입력)';
-            document.getElementById('form-desc').innerHTML = '한 번에 최대 6경기까지 입력할 수 있습니다. <span class="text-indigo-400 font-medium">내용을 입력한 경기만 자동으로 저장되며, 빈 칸은 무시됩니다.</span>';
+            document.getElementById('form-desc').innerHTML = '한 번에 최대 16경기까지 입력할 수 있어요. <span class="text-[#E86A58] font-bold">내용을 입력한 경기만 자동으로 저장됩니다!</span>';
             document.getElementById('submit-btn').innerText = '클라우드에 저장하기';
             document.getElementById('submit-btn-bottom').innerText = '클라우드에 저장하기';
             document.getElementById('cancel-edit-btn').classList.add('hidden');
             document.getElementById('cancel-edit-btn-bottom').classList.add('hidden');
             renderMatchBlocks(MAX_MATCH_BLOCKS);
+            setRecordType(currentRecordType);
+        }
+
+        // ==========================================
+        // 대회 참가팀 현황 관리
+        // ==========================================
+        function renderTeamMemberInputs(members = []) {
+            const container = document.getElementById('team-members-inputs');
+            const defaultPos = ['TOP', 'JUG', 'MID', 'BOT', 'SUP'];
+            container.innerHTML = '';
+
+            for (let i = 0; i < 5; i++) {
+                const m = members[i] || { pos: defaultPos[i], tier: '', name: '' };
+                const row = document.createElement('div');
+                row.className = "flex flex-wrap sm:flex-nowrap gap-2 items-center bg-white p-2.5 rounded-2xl border border-[#E8D9C8]";
+                row.innerHTML = `
+                    <select class="team-mem-pos bg-[#FAF6F0] border border-[#E8D9C8] text-sm font-bold text-[#5C4D40] rounded-xl px-3 py-2 focus:outline-none">
+                        <option value="TOP" ${m.pos==='TOP'?'selected':''}>TOP</option>
+                        <option value="JUG" ${m.pos==='JUG'?'selected':''}>JUG</option>
+                        <option value="MID" ${m.pos==='MID'?'selected':''}>MID</option>
+                        <option value="BOT" ${m.pos==='BOT'?'selected':''}>BOT</option>
+                        <option value="SUP" ${m.pos==='SUP'?'selected':''}>SUP</option>
+                    </select>
+                    <input type="text" placeholder="티어 (예: M800)" value="${m.tier || ''}" class="team-mem-tier w-28 sm:w-32 bg-[#FAF6F0] border border-[#E8D9C8] rounded-xl px-3 py-2 text-sm text-[#3D352E] focus:outline-none focus:border-[#FF8A7A]">
+                    <input type="text" placeholder="롤닉네임#태그" value="${m.name || ''}" class="team-mem-name flex-1 bg-[#FAF6F0] border border-[#E8D9C8] rounded-xl px-3.5 py-2 text-sm text-[#3D352E] focus:outline-none focus:border-[#FF8A7A]">
+                `;
+                container.appendChild(row);
+            }
+        }
+
+        async function saveTeam() {
+            const teamName = document.getElementById('team-name-input').value.trim();
+            if (!teamName) return alert('팀 이름을 입력해주세요.');
+
+            const rows = document.querySelectorAll('#team-members-inputs > div');
+            let members = [];
+            rows.forEach(row => {
+                const pos = row.querySelector('.team-mem-pos').value;
+                const tier = row.querySelector('.team-mem-tier').value.trim();
+                const name = row.querySelector('.team-mem-name').value.trim();
+                members.push({ pos, tier, name });
+            });
+
+            const editId = document.getElementById('edit-team-id').value;
+            if (editId) {
+                const idx = confirmedTeams.findIndex(t => t.id == editId);
+                if (idx !== -1) {
+                    confirmedTeams[idx].name = teamName;
+                    confirmedTeams[idx].members = members;
+                }
+            } else {
+                confirmedTeams.push({
+                    id: Date.now(),
+                    name: teamName,
+                    members: members
+                });
+            }
+
+            const success = await saveToCloud();
+            if (success) {
+                alert('참가 팀 정보가 클라우드에 저장되었습니다!');
+                resetTeamForm();
+                renderTeams();
+            }
+        }
+
+        function editTeam(id) {
+            const team = confirmedTeams.find(t => t.id == id);
+            if (!team) return;
+            document.getElementById('edit-team-id').value = team.id;
+            document.getElementById('team-name-input').value = team.name;
+            document.getElementById('team-form-title').innerText = '✏️ 참가 팀 정보 수정';
+            document.getElementById('cancel-team-edit-btn').classList.remove('hidden');
+            renderTeamMemberInputs(team.members);
+            document.getElementById('team-admin-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function deleteTeam(id) {
+            if (!confirm('이 참가 팀을 삭제하시겠습니까?')) return;
+            confirmedTeams = confirmedTeams.filter(t => t.id != id);
+            const success = await saveToCloud();
+            if (success) renderTeams();
+        }
+
+        function resetTeamForm() {
+            document.getElementById('edit-team-id').value = '';
+            document.getElementById('team-name-input').value = '';
+            document.getElementById('team-form-title').innerText = '✨ 새 참가 팀 등록 (햇비 모드)';
+            document.getElementById('cancel-team-edit-btn').classList.add('hidden');
+            renderTeamMemberInputs();
+        }
+
+        function renderTeams() {
+            const listEl = document.getElementById('teams-list');
+            if (confirmedTeams.length === 0) {
+                listEl.innerHTML = `<div class="col-span-full bg-white border border-[#F0E4D4] p-12 rounded-3xl text-center text-[#9C8878] shadow-sm">아직 등록된 참가 팀이 없습니다. 🐻‍❄️</div>`;
+                return;
+            }
+
+            listEl.innerHTML = confirmedTeams.map(team => `
+                <div class="bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-4 shadow-sm hover:border-[#FFD5CE] transition">
+                    <div class="flex justify-between items-center border-b border-[#F2E6D8] pb-3.5">
+                        <h3 class="text-lg font-extrabold text-[#3D352E] flex items-center gap-2">
+                            <span class="bg-[#FFF0ED] text-[#E86A58] px-2.5 py-1 rounded-xl text-sm">TEAM</span>
+                            ${team.name}
+                        </h3>
+                        ${isAdmin ? `
+                            <div class="flex space-x-1.5">
+                                <button onclick="editTeam(${team.id})" class="text-xs font-bold text-[#E86A58] bg-[#FFF4F2] border border-[#FFD5CE] px-3 py-1.5 rounded-xl">수정</button>
+                                <button onclick="deleteTeam(${team.id})" class="text-xs font-bold text-rose-500 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-xl">삭제</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="space-y-2">
+                        ${team.members.map(m => `
+                            <div class="flex items-center justify-between bg-[#FAF6F0] px-4 py-2.5 rounded-2xl border border-[#EFE5D8]">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-xs font-extrabold text-[#7A6859] bg-white border border-[#E8D9C8] w-12 text-center py-1 rounded-lg">${m.pos}</span>
+                                    ${m.name ? `
+                                        <button onclick="goToPlayerSearch('${m.name.replace(/'/g, "\\'")}'); return false;" class="text-base font-bold text-[#3D352E] hover:text-[#E86A58] hover:underline text-left transition cursor-pointer">
+                                            ${m.name}
+                                        </button>
+                                    ` : '<span class="text-sm text-[#B5A495]">미정</span>'}
+                                </div>
+                                ${m.tier ? `<span class="text-xs font-extrabold bg-[#FFF0ED] text-[#E86A58] px-2.5 py-1 rounded-full border border-[#FFD5CE]">${m.tier}</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function goToPlayerSearch(name) {
+            switchTab('search');
+            document.getElementById('search-input').value = name;
+            searchSummoner();
         }
 
         function updateMatchCount() {
@@ -502,94 +810,97 @@
             document.getElementById('match-total-count').innerText = matches.length;
         }
 
-        function getAllPlayersList() {
-            let set = new Set();
-            matches.forEach(m => {
-                m.blue.forEach(p => { if(p.name) set.add(p.name); });
-                m.red.forEach(p => { if(p.name) set.add(p.name); });
+        function setMatchListFilter(filter) {
+            currentMatchListFilter = filter;
+            ['all', 'before', 'after'].forEach(f => {
+                const btn = document.getElementById(`ml-filter-${f}`);
+                if (f === filter) {
+                    btn.className = 'px-3.5 py-1.5 rounded-xl text-sm font-bold bg-white text-[#E86A58] shadow-2xs transition';
+                } else {
+                    btn.className = 'px-3.5 py-1.5 rounded-xl text-sm font-bold text-[#8C7A6B] hover:text-[#3D352E] transition';
+                }
             });
-            return Array.from(set);
-        }
-
-        function renderQuickTags() {
-            const container = document.getElementById('quick-tags');
-            const players = getAllPlayersList();
-            if (players.length === 0) {
-                container.innerHTML = `<span class="text-xs text-gray-500">등록된 소환사가 없습니다.</span>`;
-                return;
-            }
-            container.innerHTML = players.map(name => `
-                <button onclick="searchSpecificPlayer('${name.replace(/'/g, "\\'")}')" class="bg-gray-950 hover:bg-indigo-600/20 text-gray-300 hover:text-indigo-400 border border-gray-800 hover:border-indigo-500/40 text-xs px-3 py-1.5 rounded-xl transition font-medium">
-                    ${name}
-                </button>
-            `).join('');
-        }
-
-        function searchSpecificPlayer(name) {
-            document.getElementById('search-input').value = name;
-            searchSummoner();
+            renderMatches();
         }
 
         function renderMatches() {
             const listEl = document.getElementById('match-list');
-            if (matches.length === 0) {
-                listEl.innerHTML = `<div class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-500">등록된 매치 기록이 없습니다.</div>`;
+            const filteredMatches = matches.filter(m => {
+                const type = m.recordType || 'before';
+                if (currentMatchListFilter === 'all') return true;
+                return type === currentMatchListFilter;
+            });
+
+            if (filteredMatches.length === 0) {
+                listEl.innerHTML = `<div class="bg-white border border-[#F0E4D4] p-12 rounded-3xl text-center text-[#9C8878] shadow-sm">해당 조건의 매치 기록이 없습니다.</div>`;
                 return;
             }
 
-            listEl.innerHTML = matches.map((m, idx) => `
-                <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs font-bold text-gray-400">#${matches.length - idx}</span>
-                            <span class="text-xs text-gray-500">${m.date}</span>
+            listEl.innerHTML = filteredMatches.map(m => {
+                const originalNum = matches.length - matches.indexOf(m);
+                const isAfter = (m.recordType === 'after');
+                return `
+                <div class="bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-4 shadow-sm">
+                    <div class="flex flex-wrap justify-between items-center gap-2 border-b border-[#F2E6D8] pb-3.5">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="text-sm font-extrabold text-[#7A6859]">#${originalNum}</span>
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded-full ${isAfter ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
+                                ${isAfter ? '🔥 확정 이후' : '🌱 확정 이전'}
+                            </span>
+                            <span class="text-sm text-[#9C8878]">${m.date}</span>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <span class="text-xs font-bold px-3 py-1 rounded-full ${m.winner === 'blue' ? 'bg-blue-900/50 text-blue-400 border border-blue-500/30' : 'bg-red-900/50 text-red-400 border border-red-500/30'}">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="text-sm font-extrabold px-3.5 py-1 rounded-full ${m.winner === 'blue' ? 'bg-[#E0F2FE] text-[#0284C7] border border-[#BAE6FD]' : 'bg-[#FFE4E6] text-[#E11D48] border border-[#FECDD3]'}">
                                 ${m.winner === 'blue' ? '🔵 블루팀 승리' : '🔴 레드팀 승리'}
                             </span>
                             ${isAdmin ? `
                                 <div class="flex space-x-1.5">
-                                    <button onclick="editMatch(${m.id})" class="text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-950/40 border border-indigo-900/50 px-2.5 py-1 rounded-lg">수정</button>
-                                    <button onclick="deleteMatch(${m.id})" class="text-xs text-red-400 hover:text-red-300 bg-red-950/40 border border-red-900/50 px-2.5 py-1 rounded-lg">삭제</button>
+                                    <button onclick="editMatch(${m.id})" class="text-xs font-bold text-[#E86A58] bg-[#FFF4F2] border border-[#FFD5CE] px-3 py-1.5 rounded-xl">수정</button>
+                                    <button onclick="deleteMatch(${m.id})" class="text-xs font-bold text-rose-500 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-xl">삭제</button>
                                 </div>
                             ` : ''}
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-blue-950/10 border border-blue-900/20 p-3 rounded-xl">
-                            <div class="text-xs font-bold text-blue-400 mb-2">🔵 블루팀 라인업</div>
-                            <div class="space-y-1">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <div class="bg-[#F4F9FE] border border-[#D4E7F9] p-4 rounded-2xl">
+                            <div class="text-sm font-extrabold text-[#0284C7] mb-2.5">🔵 블루팀 라인업</div>
+                            <div class="space-y-1.5">
                                 ${m.blue.map(p => `
-                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
-                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                        <span class="flex-1 px-2 flex items-center space-x-2">
-                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-blue-400 hover:underline">${p.name}</a>` : '-'}
-                                            ${p.tier ? `<span class="text-[10px] bg-blue-900/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-700/30">${p.tier}</span>` : ''}
+                                    <div class="text-sm flex justify-between text-[#3D352E] py-1 items-center border-b border-[#E3EFFB] last:border-none">
+                                        <span class="font-extrabold text-[#64748B] w-11">${p.pos}</span>
+                                        <span class="flex-1 px-2 flex flex-wrap items-center gap-1.5">
+                                            ${p.name ? `<a href="#" onclick="goToPlayerSearch('${p.name.replace(/'/g, "\\'")}'); return false;" class="font-bold text-[#0369A1] hover:underline">${p.name}</a>` : '-'}
+                                            ${p.tier ? `<span class="text-xs font-bold bg-white text-[#0284C7] px-2 py-0.5 rounded-md border border-[#BAE6FD]">${p.tier}</span>` : ''}
                                         </span>
-                                        <span class="text-indigo-400">${p.champ || '-'}</span>
+                                        <div class="text-right flex items-center gap-2">
+                                            ${p.kda ? `<span class="text-xs font-extrabold text-[#E86A58] bg-white px-2 py-0.5 rounded-md border border-[#FFD5CE]">${p.kda}</span>` : ''}
+                                            <span class="font-bold text-[#475569]">${p.champ || '-'}</span>
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
-                        <div class="bg-red-950/10 border border-red-900/20 p-3 rounded-xl">
-                            <div class="text-xs font-bold text-red-400 mb-2">🔴 레드팀 라인업</div>
-                            <div class="space-y-1">
+                        <div class="bg-[#FFF6F7] border border-[#FAD4DC] p-4 rounded-2xl">
+                            <div class="text-sm font-extrabold text-[#E11D48] mb-2.5">🔴 레드팀 라인업</div>
+                            <div class="space-y-1.5">
                                 ${m.red.map(p => `
-                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
-                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                        <span class="flex-1 px-2 flex items-center space-x-2">
-                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
-                                            ${p.tier ? `<span class="text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-700/30">${p.tier}</span>` : ''}
+                                    <div class="text-sm flex justify-between text-[#3D352E] py-1 items-center border-b border-[#FCE4E9] last:border-none">
+                                        <span class="font-extrabold text-[#885A64] w-11">${p.pos}</span>
+                                        <span class="flex-1 px-2 flex flex-wrap items-center gap-1.5">
+                                            ${p.name ? `<a href="#" onclick="goToPlayerSearch('${p.name.replace(/'/g, "\\'")}'); return false;" class="font-bold text-[#BE123C] hover:underline">${p.name}</a>` : '-'}
+                                            ${p.tier ? `<span class="text-xs font-bold bg-white text-[#E11D48] px-2 py-0.5 rounded-md border border-[#FECDD3]">${p.tier}</span>` : ''}
                                         </span>
-                                        <span class="text-indigo-400">${p.champ || '-'}</span>
+                                        <div class="text-right flex items-center gap-2">
+                                            ${p.kda ? `<span class="text-xs font-extrabold text-[#E86A58] bg-white px-2 py-0.5 rounded-md border border-[#FFD5CE]">${p.kda}</span>` : ''}
+                                            <span class="font-bold text-[#5C3D44]">${p.champ || '-'}</span>
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         async function deleteMatch(id) {
@@ -604,31 +915,166 @@
             }
         }
 
+        function getAllPlayersList() {
+            let set = new Set();
+            matches.forEach(m => {
+                m.blue.forEach(p => { if(p.name) set.add(p.name.trim()); });
+                m.red.forEach(p => { if(p.name) set.add(p.name.trim()); });
+            });
+            confirmedTeams.forEach(t => {
+                t.members.forEach(m => { if(m.name) set.add(m.name.trim()); });
+            });
+            return Array.from(set);
+        }
+
+        function renderQuickTags() {
+            const container = document.getElementById('quick-tags');
+            const players = getAllPlayersList();
+            if (players.length === 0) {
+                container.innerHTML = `<span class="text-sm text-[#9C8878]">등록된 소환사가 없습니다.</span>`;
+                return;
+            }
+            container.innerHTML = players.map(name => `
+                <button onclick="selectSummonerForDetail('${name.replace(/'/g, "\\'")}')" class="bg-[#FAF6F0] hover:bg-[#FFF0ED] text-[#5C4D40] hover:text-[#E86A58] border border-[#E8D9C8] hover:border-[#FFD5CE] text-sm px-3.5 py-1.5 rounded-full transition font-bold cursor-pointer">
+                    ${name}
+                </button>
+            `).join('');
+        }
+
         function searchSummoner() {
             const query = document.getElementById('search-input').value.trim().toLowerCase();
             const resultEl = document.getElementById('search-result');
             if (!query) {
+                currentSelectedSummoner = '';
                 resultEl.innerHTML = `
-                    <div class="text-center text-gray-500 py-12">
-                        <div class="text-3xl mb-2">🔍</div>
-                        <p class="text-sm">검색할 소환사 닉네임을 입력해 주세요.</p>
+                    <div class="text-center text-[#9C8878] py-12">
+                        <div class="text-4xl mb-3">🐻‍❄️</div>
+                        <p class="text-base font-medium">검색할 소환사 닉네임을 입력해 주세요!</p>
                     </div>`;
                 return;
             }
 
+            const allPlayers = getAllPlayersList();
+            const exactMatch = allPlayers.find(name => name.toLowerCase() === query);
+            if (exactMatch) {
+                selectSummonerForDetail(exactMatch);
+                return;
+            }
+
+            const matchedPlayers = allPlayers.filter(name => name.toLowerCase().includes(query));
+
+            if (matchedPlayers.length === 0) {
+                currentSelectedSummoner = '';
+                resultEl.innerHTML = `<div class="py-12 text-center text-[#8C7A6B] text-base font-medium">"${query}" 소환사의 스크림 전적 기록이 없습니다. 😢</div>`;
+                return;
+            }
+
+            if (matchedPlayers.length === 1) {
+                selectSummonerForDetail(matchedPlayers[0]);
+                return;
+            }
+
+            currentSelectedSummoner = '';
+            resultEl.innerHTML = `
+                <div class="py-6 space-y-5 text-left">
+                    <div class="text-center space-y-1">
+                        <div class="text-3xl">🤔</div>
+                        <h3 class="text-lg font-extrabold text-[#3D352E]">비슷한 닉네임의 소환사가 ${matchedPlayers.length}명 있어요!</h3>
+                        <p class="text-sm text-[#8C7A6B]">전적을 확인할 소환사를 선택해 주세요.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto pt-2">
+                        ${matchedPlayers.map(fullName => `
+                            <button onclick="selectSummonerForDetail('${fullName.replace(/'/g, "\\'")}')" class="flex items-center justify-between bg-[#FAF6F0] hover:bg-[#FFF0ED] border border-[#E8D9C8] hover:border-[#FF8A7A] p-4 rounded-2xl transition text-left group cursor-pointer">
+                                <span class="text-base font-extrabold text-[#3D352E] group-hover:text-[#E86A58]">${fullName}</span>
+                                <span class="text-xs font-bold text-[#E86A58] bg-white px-2.5 py-1 rounded-full border border-[#FFD5CE]">선택 →</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectSummonerForDetail(fullName) {
+            currentSelectedSummoner = fullName;
+            selectedChampFilter = null;
+            document.getElementById('search-input').value = fullName;
+            renderSummonerDetail(fullName);
+        }
+
+        function setSearchFilter(filter) {
+            currentSearchFilter = filter;
+            selectedChampFilter = null;
+            if (currentSelectedSummoner) {
+                renderSummonerDetail(currentSelectedSummoner);
+            }
+        }
+
+        function toggleChampFilter(champName) {
+            if (selectedChampFilter === champName) {
+                selectedChampFilter = null;
+            } else {
+                selectedChampFilter = champName;
+            }
+            if (currentSelectedSummoner) {
+                renderSummonerDetail(currentSelectedSummoner);
+            }
+        }
+
+        async function savePlayerMemo(fullName) {
+            const memoInput = document.getElementById('player-memo-input');
+            const saveBtn = document.getElementById('save-memo-btn');
+            if (!memoInput) return;
+
+            playerNotes[fullName] = memoInput.value.trim();
+            if (saveBtn) {
+                saveBtn.innerText = '저장 중...';
+                saveBtn.disabled = true;
+            }
+
+            const success = await saveToCloud();
+            if (success && saveBtn) {
+                saveBtn.innerText = '✅ 저장 완료!';
+                setTimeout(() => {
+                    saveBtn.innerText = '💾 메모 저장';
+                    saveBtn.disabled = false;
+                }, 1500);
+            } else if (saveBtn) {
+                saveBtn.innerText = '💾 메모 저장';
+                saveBtn.disabled = false;
+            }
+        }
+
+        function renderSummonerDetail(fullName) {
+            const resultEl = document.getElementById('search-result');
             let foundGames = [];
             let posStats = {}; 
             let wins = 0, losses = 0;
             let lastKnownTier = '';
 
+            confirmedTeams.forEach(t => {
+                const mem = t.members.find(m => m.name.trim().toLowerCase() === fullName.toLowerCase());
+                if (mem && mem.tier) lastKnownTier = mem.tier;
+            });
+
             matches.forEach((m, idx) => {
+                const mType = m.recordType || 'before';
+                if (currentSearchFilter !== 'all' && mType !== currentSearchFilter) return;
+
                 const allPlayers = [...m.blue.map(p => ({...p, team: 'blue'})), ...m.red.map(p => ({...p, team: 'red'}))];
-                const matched = allPlayers.find(p => p.name.toLowerCase().includes(query));
+                const matched = allPlayers.find(p => p.name.trim().toLowerCase() === fullName.toLowerCase());
                 if (matched) {
                     if (matched.tier) lastKnownTier = matched.tier;
                     const isWin = (matched.team === m.winner);
                     if (isWin) wins++; else losses++;
-                    foundGames.push({ ...m, originalIndex: matches.length - idx, myTeam: matched.team, myChamp: matched.champ, myPos: matched.pos, isWin });
+                    foundGames.push({ 
+                        ...m, 
+                        originalIndex: matches.length - idx, 
+                        myTeam: matched.team, 
+                        myChamp: matched.champ, 
+                        myPos: matched.pos,
+                        myKda: matched.kda || '',
+                        isWin 
+                    });
 
                     const pos = matched.pos || 'ETC';
                     if (!posStats[pos]) {
@@ -647,13 +1093,9 @@
                 }
             });
 
-            if (foundGames.length === 0) {
-                resultEl.innerHTML = `<div class="bg-gray-900 border border-gray-800 p-12 rounded-2xl text-center text-gray-400">"${query}" 소환사의 스크림 전적 기록이 없습니다.</div>`;
-                return;
-            }
-
             const total = wins + losses;
-            const winRate = Math.round((wins / total) * 100);
+            const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+            const savedMemo = playerNotes[fullName] || '';
 
             const posOrder = ['TOP', 'JUG', 'MID', 'BOT', 'SUP'];
             let sortedPositions = Object.entries(posStats).sort((a, b) => {
@@ -665,125 +1107,173 @@
                 return b[1].total - a[1].total;
             });
 
+            const displayedGames = selectedChampFilter 
+                ? foundGames.filter(g => g.myChamp === selectedChampFilter)
+                : foundGames;
+
             resultEl.innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl flex items-center justify-between">
-                        <div>
-                            <div class="flex items-center space-x-2">
-                                <h3 class="text-lg font-bold text-white">${query}</h3>
-                                ${lastKnownTier ? `<span class="text-xs bg-indigo-950 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-800/50">${lastKnownTier}</span>` : ''}
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">스크림 통산전적: ${total}전 ${wins}승 ${losses}패</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-2xl font-bold ${winRate >= 50 ? 'text-indigo-400' : 'text-red-400'}">${winRate}%</span>
-                            <p class="text-xs text-gray-500">승률</p>
-                        </div>
-                    </div>
-                    
-                    <!-- 🛡️ 포지션(라인)별 챔피언 통계 (승률 높은 순 정렬) -->
-                    <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl space-y-4">
-                        <h4 class="text-sm font-bold text-white">🛡️ 포지션(라인)별 챔피언 통계 (승률순)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            ${sortedPositions.map(([pos, pStat]) => {
-                                const pWinRate = Math.round((pStat.wins / pStat.total) * 100);
-                                
-                                // 🌟 챔피언 정렬 조건: 1순위 승률 높은 순(내림차순), 2순위 판수 많은 순(내림차순)
-                                const sortedPosChamps = Object.entries(pStat.champs).sort((a, b) => {
-                                    const rateA = Math.round((a[1].wins / a[1].total) * 100);
-                                    const rateB = Math.round((b[1].wins / b[1].total) * 100);
-                                    if (rateA !== rateB) {
-                                        return rateB - rateA; // 승률 높은 순
-                                    }
-                                    return b[1].total - a[1].total; // 승률이 같으면 판수 많은 순
-                                });
-                                
-                                return `
-                                    <div class="bg-gray-950 border border-gray-800 p-4 rounded-xl space-y-3">
-                                        <div class="flex justify-between items-center border-b border-gray-800/80 pb-2">
-                                            <div class="flex items-center space-x-2">
-                                                <span class="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold px-2.5 py-0.5 rounded-md">${pos}</span>
-                                                <span class="text-xs text-gray-300 font-semibold">${pStat.total}전 ${pStat.wins}승 ${pStat.total - pStat.wins}패</span>
-                                            </div>
-                                            <span class="text-xs font-bold ${pWinRate >= 50 ? 'text-indigo-400' : 'text-red-400'}">${pWinRate}% 승률</span>
-                                        </div>
-                                        <div class="space-y-1.5">
-                                            <div class="text-[11px] text-gray-400 font-medium">플레이한 모든 챔피언 (승률순 정렬)</div>
-                                            <div class="flex flex-wrap gap-1.5">
-                                                ${sortedPosChamps.length > 0 ? sortedPosChamps.map(([champ, cStat]) => {
-                                                    const cWinRate = Math.round((cStat.wins / cStat.total) * 100);
-                                                    return `
-                                                        <span class="bg-gray-900 border border-gray-800 text-gray-300 text-xs px-2.5 py-1 rounded-lg">
-                                                            <strong class="text-white">${champ}</strong> <span class="text-gray-400 text-[11px]">(${cStat.total}판 ${cWinRate}%)</span>
-                                                        </span>
-                                                    `;
-                                                }).join('') : '<span class="text-xs text-gray-500">기록된 챔피언 정보 없음</span>'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
+                <div class="space-y-6 text-left">
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#F2E6D8] pb-4">
+                        <span class="text-sm font-bold text-[#8C7A6B]">📊 전적 조회 범위 선택</span>
+                        <div class="flex items-center gap-2 bg-[#FAF6F0] p-1.5 rounded-2xl border border-[#E8D9C8]">
+                            <button onclick="setSearchFilter('all')" class="px-4 py-1.5 rounded-xl text-sm font-bold transition ${currentSearchFilter==='all' ? 'bg-white text-[#E86A58] shadow-2xs' : 'text-[#8C7A6B] hover:text-[#3D352E]'}">통합</button>
+                            <button onclick="setSearchFilter('before')" class="px-4 py-1.5 rounded-xl text-sm font-bold transition ${currentSearchFilter==='before' ? 'bg-white text-[#E86A58] shadow-2xs' : 'text-[#8C7A6B] hover:text-[#3D352E]'}">🌱 확정 이전</button>
+                            <button onclick="setSearchFilter('after')" class="px-4 py-1.5 rounded-xl text-sm font-bold transition ${currentSearchFilter==='after' ? 'bg-white text-[#E86A58] shadow-2xs' : 'text-[#8C7A6B] hover:text-[#3D352E]'}">🔥 확정 이후</button>
                         </div>
                     </div>
 
-                    <div class="space-y-4 pt-4">
-                        <h4 class="text-sm font-bold text-white">참여 매치 기록</h4>
-                        <div class="space-y-4">
-                            ${foundGames.map(m => `
-                                <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-4">
-                                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                                        <div class="flex items-center space-x-3">
-                                            <span class="text-xs font-bold text-gray-400">#${m.originalIndex}</span>
-                                            <span class="text-xs text-gray-500">${m.date}</span>
-                                        </div>
-                                        <div class="flex items-center space-x-3">
-                                            <span class="text-xs font-bold px-3 py-1 rounded-full ${m.winner === 'blue' ? 'bg-blue-900/50 text-blue-400 border border-blue-500/30' : 'bg-red-900/50 text-red-400 border border-red-500/30'}">
-                                                ${m.winner === 'blue' ? '🔵 블루팀 승리' : '🔴 레드팀 승리'}
-                                            </span>
-                                            ${isAdmin ? `
-                                                <div class="flex space-x-1.5">
-                                                    <button onclick="editMatch(${m.id})" class="text-xs text-indigo-400 hover:text-indigo-300 bg-indigo-950/40 border border-indigo-900/50 px-2.5 py-1 rounded-lg">수정</button>
-                                                    <button onclick="deleteMatch(${m.id})" class="text-xs text-red-400 hover:text-red-300 bg-red-950/40 border border-red-900/50 px-2.5 py-1 rounded-lg">삭제</button>
-                                                </div>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div class="bg-blue-950/10 border border-blue-900/20 p-3 rounded-xl">
-                                            <div class="text-xs font-bold text-blue-400 mb-2">🔵 블루팀 라인업</div>
-                                            <div class="space-y-1">
-                                                ${m.blue.map(p => `
-                                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
-                                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                                        <span class="flex-1 px-2 flex items-center space-x-2">
-                                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-blue-400 hover:underline">${p.name}</a>` : '-'}
-                                                            ${p.tier ? `<span class="text-[10px] bg-blue-900/40 text-blue-300 px-1.5 py-0.5 rounded border border-blue-700/30">${p.tier}</span>` : ''}
-                                                        </span>
-                                                        <span class="text-indigo-400">${p.champ || '-'}</span>
-                                                    </div>
-                                                `).join('')}
-                                            </div>
-                                        </div>
-                                        <div class="bg-red-950/10 border border-red-900/20 p-3 rounded-xl">
-                                            <div class="text-xs font-bold text-red-400 mb-2">🔴 레드팀 라인업</div>
-                                            <div class="space-y-1">
-                                                ${m.red.map(p => `
-                                                    <div class="text-xs flex justify-between text-gray-300 py-0.5 items-center">
-                                                        <span class="font-semibold text-gray-400 w-10">${p.pos}</span>
-                                                        <span class="flex-1 px-2 flex items-center space-x-2">
-                                                            ${p.name ? `<a href="#" onclick="switchTab('search'); searchSpecificPlayer('${p.name.replace(/'/g, "\\'")}'); return false;" class="text-red-400 hover:underline">${p.name}</a>` : '-'}
-                                                            ${p.tier ? `<span class="text-[10px] bg-red-900/40 text-red-300 px-1.5 py-0.5 rounded border border-red-700/30">${p.tier}</span>` : ''}
-                                                        </span>
-                                                        <span class="text-indigo-400">${p.champ || '-'}</span>
-                                                    </div>
-                                                `).join('')}
-                                            </div>
-                                        </div>
-                                    </div>
+                    <div class="bg-[#FFF9F2] border border-[#F2E2D4] p-6 rounded-3xl space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2.5">
+                                    <h3 class="text-2xl font-extrabold text-[#3D352E]">${fullName}</h3>
+                                    ${lastKnownTier ? `<span class="text-sm font-extrabold bg-white text-[#E86A58] px-3 py-1 rounded-full border border-[#FFD5CE]">${lastKnownTier}</span>` : ''}
                                 </div>
-                            `).join('')}
+                                <p class="text-base font-medium text-[#7A6859] mt-1.5">
+                                    스크림 전적: <strong class="text-[#3D352E]">${total}전 ${wins}승 ${losses}패</strong>
+                                </p>
+                            </div>
+                            <div class="text-right bg-white px-5 py-3 rounded-2xl border border-[#F0E4D4]">
+                                <span class="text-3xl font-extrabold ${winRate >= 50 ? 'text-[#0284C7] animate-pulse' : 'text-[#E11D48]'}">${winRate}%</span>
+                                <p class="text-xs font-bold text-[#9C8878] mt-0.5">승률</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-[#E8D9C8] p-3.5 rounded-2xl flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+                            <span class="text-sm font-extrabold text-[#E86A58] px-2 shrink-0">📝 소환사 메모</span>
+                            <input type="text" id="player-memo-input" value="${savedMemo.replace(/"/g, '&quot;')}" placeholder="이 소환사에 대한 특징, 주력 픽, 피드백 등을 자유롭게 남겨주세요!" class="flex-1 bg-[#FAF6F0] border border-[#EFE5D8] rounded-xl px-3.5 py-2 text-sm text-[#3D352E] focus:outline-none focus:border-[#FF8A7A]">
+                            <button id="save-memo-btn" onclick="savePlayerMemo('${fullName.replace(/'/g, "\\'")}')" class="bg-[#FF8A7A] hover:bg-[#F47665] text-white text-sm font-bold px-4 py-2 rounded-xl transition shrink-0 cursor-pointer">
+                                💾 메모 저장
+                            </button>
                         </div>
                     </div>
+                    
+                    ${total === 0 ? `
+                        <div class="py-10 text-center text-[#8C7A6B] bg-[#FAF6F0] rounded-3xl border border-[#EFE5D8]">
+                            선택한 구분(<strong>${currentSearchFilter === 'before' ? '확정 이전' : '확정 이후'}</strong>)에는 아직 기록된 경기가 없습니다!
+                        </div>
+                    ` : `
+                        <div class="bg-[#FAF6F0] border border-[#EFE5D8] p-6 rounded-3xl space-y-4">
+                            <div class="flex flex-wrap justify-between items-center gap-2">
+                                <h4 class="text-base font-extrabold text-[#3D352E]">🛡️ 포지션별 챔피언 통계 (승률순)</h4>
+                                <span class="text-xs font-bold text-[#E86A58]">💡 챔피언을 클릭하면 해당 챔피언 경기만 아래에 모아볼 수 있어요!</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${sortedPositions.map(([pos, pStat]) => {
+                                    const pWinRate = Math.round((pStat.wins / pStat.total) * 100);
+                                    const sortedPosChamps = Object.entries(pStat.champs).sort((a, b) => {
+                                        const rateA = Math.round((a[1].wins / a[1].total) * 100);
+                                        const rateB = Math.round((b[1].wins / b[1].total) * 100);
+                                        if (rateA !== rateB) return rateB - rateA;
+                                        return b[1].total - a[1].total;
+                                    });
+                                    
+                                    return `
+                                        <div class="bg-white border border-[#E8D9C8] p-4 rounded-2xl space-y-3 shadow-2xs">
+                                            <div class="flex justify-between items-center border-b border-[#F2E6D8] pb-2.5">
+                                                <div class="flex items-center space-x-2">
+                                                    <span class="bg-[#FFF0ED] text-[#E86A58] border border-[#FFD5CE] text-xs font-extrabold px-2.5 py-1 rounded-lg">${pos}</span>
+                                                    <span class="text-sm text-[#3D352E] font-bold">${pStat.total}전 ${pStat.wins}승 ${pStat.total - pStat.wins}패</span>
+                                                </div>
+                                                <span class="text-sm font-extrabold ${pWinRate >= 50 ? 'text-[#0284C7]' : 'text-[#E11D48]'}">${pWinRate}% 승률</span>
+                                            </div>
+                                            <div class="space-y-2">
+                                                <div class="text-xs text-[#9C8878] font-bold">플레이한 챔피언 (클릭하여 경기 필터링)</div>
+                                                <div class="flex flex-wrap gap-2">
+                                                    ${sortedPosChamps.length > 0 ? sortedPosChamps.map(([champ, cStat]) => {
+                                                        const cWinRate = Math.round((cStat.wins / cStat.total) * 100);
+                                                        const isSelected = selectedChampFilter === champ;
+                                                        return `
+                                                            <button onclick="toggleChampFilter('${champ.replace(/'/g, "\\'")}')" class="text-sm px-3 py-1.5 rounded-xl border transition cursor-pointer ${isSelected ? 'bg-[#FF8A7A] text-white border-[#FF8A7A] font-extrabold shadow-xs' : 'bg-[#FAF6F0] hover:bg-[#FFF0ED] text-[#3D352E] border-[#E8D9C8]'}">
+                                                                <strong>${champ}</strong> <span class="${isSelected ? 'text-white/90' : 'text-[#8C7A6B]'} text-xs">(${cStat.total}판 ${cWinRate}%)</span>
+                                                            </button>
+                                                        `;
+                                                    }).join('') : '<span class="text-sm text-[#9C8878]">기록된 챔피언 정보 없음</span>'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 pt-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-base font-extrabold text-[#3D352E]">
+                                    📜 참여 매치 기록 ${selectedChampFilter ? `<span class="text-[#E86A58]">(${selectedChampFilter} 플레이 경기만 보기)</span>` : ''}
+                                </h4>
+                                ${selectedChampFilter ? `
+                                    <button onclick="toggleChampFilter('${selectedChampFilter.replace(/'/g, "\\'")}')" class="text-xs font-bold bg-[#FFF0ED] text-[#E86A58] px-3 py-1.5 rounded-full border border-[#FFD5CE]">✕ 필터 해제 (전체 보기)</button>
+                                ` : ''}
+                            </div>
+                            <div class="space-y-4">
+                                ${displayedGames.map(m => {
+                                    const isAfter = (m.recordType === 'after');
+                                    return `
+                                    <div class="bg-white border border-[#E8D9C8] p-5 rounded-3xl space-y-4 shadow-2xs">
+                                        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-[#F2E6D8] pb-3">
+                                            <div class="flex items-center space-x-2.5">
+                                                <span class="text-sm font-extrabold text-[#7A6859]">#${m.originalIndex}</span>
+                                                <span class="text-xs font-extrabold px-2.5 py-1 rounded-full ${isAfter ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}">
+                                                    ${isAfter ? '🔥 확정 이후' : '🌱 확정 이전'}
+                                                </span>
+                                                <span class="text-sm text-[#9C8878]">${m.date}</span>
+                                            </div>
+                                            <div class="flex items-center space-x-2.5">
+                                                <span class="text-xs font-extrabold px-3 py-1 rounded-full ${m.isWin ? 'bg-sky-100 text-sky-700 border border-sky-300' : 'bg-rose-100 text-rose-700 border border-rose-300'}">
+                                                    ${m.isWin ? '🎉 승리' : '💧 패배'} (${m.myChamp || '-'} ${m.myKda ? `· ${m.myKda}` : ''})
+                                                </span>
+                                                ${isAdmin ? `
+                                                    <div class="flex space-x-1.5">
+                                                        <button onclick="editMatch(${m.id})" class="text-xs font-bold text-[#E86A58] bg-[#FFF4F2] border border-[#FFD5CE] px-2.5 py-1 rounded-xl">수정</button>
+                                                        <button onclick="deleteMatch(${m.id})" class="text-xs font-bold text-rose-500 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-xl">삭제</button>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                            <div class="bg-[#F4F9FE] border border-[#D4E7F9] p-4 rounded-2xl">
+                                                <div class="text-sm font-extrabold text-[#0284C7] mb-2">🔵 블루팀 라인업</div>
+                                                <div class="space-y-1">
+                                                    ${m.blue.map(p => `
+                                                        <div class="text-sm flex justify-between text-[#3D352E] py-1 items-center">
+                                                            <span class="font-extrabold text-[#64748B] w-11">${p.pos}</span>
+                                                            <span class="flex-1 px-2 flex flex-wrap items-center gap-1.5">
+                                                                ${p.name ? `<a href="#" onclick="selectSummonerForDetail('${p.name.replace(/'/g, "\\'")}'); return false;" class="font-bold text-[#0369A1] hover:underline">${p.name}</a>` : '-'}
+                                                                ${p.tier ? `<span class="text-xs font-bold bg-white text-[#0284C7] px-2 py-0.5 rounded-md border border-[#BAE6FD]">${p.tier}</span>` : ''}
+                                                            </span>
+                                                            <div class="text-right flex items-center gap-2">
+                                                                ${p.kda ? `<span class="text-xs font-extrabold text-[#E86A58] bg-white px-2 py-0.5 rounded-md border border-[#FFD5CE]">${p.kda}</span>` : ''}
+                                                                <span class="font-bold text-[#475569]">${p.champ || '-'}</span>
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                            <div class="bg-[#FFF6F7] border border-[#FAD4DC] p-4 rounded-2xl">
+                                                <div class="text-sm font-extrabold text-[#E11D48] mb-2">🔴 레드팀 라인업</div>
+                                                <div class="space-y-1">
+                                                    ${m.red.map(p => `
+                                                        <div class="text-sm flex justify-between text-[#3D352E] py-1 items-center">
+                                                            <span class="font-extrabold text-[#885A64] w-11">${p.pos}</span>
+                                                            <span class="flex-1 px-2 flex flex-wrap items-center gap-1.5">
+                                                                ${p.name ? `<a href="#" onclick="selectSummonerForDetail('${p.name.replace(/'/g, "\\'")}'); return false;" class="font-bold text-[#BE123C] hover:underline">${p.name}</a>` : '-'}
+                                                                ${p.tier ? `<span class="text-xs font-bold bg-white text-[#E11D48] px-2 py-0.5 rounded-md border border-[#FECDD3]">${p.tier}</span>` : ''}
+                                                            </span>
+                                                            <div class="text-right flex items-center gap-2">
+                                                                ${p.kda ? `<span class="text-xs font-extrabold text-[#E86A58] bg-white px-2 py-0.5 rounded-md border border-[#FFD5CE]">${p.kda}</span>` : ''}
+                                                                <span class="font-bold text-[#5C3D44]">${p.champ || '-'}</span>
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `}).join('')}
+                            </div>
+                        </div>
+                    `}
                 </div>
             `;
         }
