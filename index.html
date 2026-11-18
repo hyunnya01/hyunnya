@@ -261,8 +261,8 @@
 
     <script>
         // ==========================================
-        const GIST_ID = 'b3ccc0464c764e83757c201a92d0b45';[cite: 5]
-        const GIST_FILENAME = 'gistfile1.txt';[cite: 5]
+        const GIST_ID = 'b3ccc0464c764e83757c201a92d0b45';
+        const GIST_FILENAME = 'gistfile1.txt';
         let githubToken = localStorage.getItem('lol_scrim_github_token') || '';
         const MAX_MATCH_BLOCKS = 16;
         // ==========================================
@@ -290,7 +290,6 @@
             const statusEl = document.getElementById('sync-status');
             statusEl.innerText = '⏳ 동기화 중...';
             try {
-                // Gist Raw 주소에서 최신 데이터 불러오기 (캐시 방지 ?t= 쿼리 추가)[cite: 5]
                 const res = await fetch(`https://gist.githubusercontent.com/hyunnya01/${GIST_ID}/raw/${GIST_FILENAME}?t=${Date.now()}`);
                 if (!res.ok) throw new Error('불러오기 실패');
                 const record = await res.json();
