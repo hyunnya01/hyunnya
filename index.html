@@ -47,9 +47,80 @@
             background: #1f2937;
             color: #FF8A7A;
         }
+    
+        /* Night-sky theme: visual-only overrides; app logic and data are unchanged. */
+        body.night-sky-theme {
+            background: #080f20 !important;
+            color: #e6edf8 !important;
+            color-scheme: dark;
+        }
+        body.night-sky-theme #site-header {
+            background: #0d1930 !important;
+            border-color: #223452 !important;
+            color: #edf4ff !important;
+        }
+        body.night-sky-theme #site-nav {
+            background: rgba(11, 23, 44, .94) !important;
+            border-color: #223452 !important;
+        }
+        body.night-sky-theme [class~="bg-white"],
+        body.night-sky-theme [class*="bg-[#FFF"],
+        body.night-sky-theme [class*="bg-[#FAF"],
+        body.night-sky-theme [class*="bg-[#F3"],
+        body.night-sky-theme [class*="bg-[#F4"],
+        body.night-sky-theme [class*="bg-[#EFE"],
+        body.night-sky-theme [class*="bg-[#F0"],
+        body.night-sky-theme [class*="bg-[#F2"] {
+            background-color: #111f38 !important;
+            color: #e6edf8 !important;
+        }
+        body.night-sky-theme [class*="border-[#F"],
+        body.night-sky-theme [class*="border-[#E"],
+        body.night-sky-theme [class*="border-[#D"] {
+            border-color: #2b4163 !important;
+        }
+        body.night-sky-theme [class*="text-[#3D352E"],
+        body.night-sky-theme [class*="text-[#6B5B4E"],
+        body.night-sky-theme [class*="text-[#7A6859"],
+        body.night-sky-theme [class*="text-[#8C7A6B"],
+        body.night-sky-theme [class*="text-[#9C8878"],
+        body.night-sky-theme [class*="text-[#B5A495"] {
+            color: #b9c9e2 !important;
+        }
+        body.night-sky-theme input,
+        body.night-sky-theme textarea,
+        body.night-sky-theme select {
+            background-color: #0a162b !important;
+            color: #edf4ff !important;
+            border-color: #344c70 !important;
+        }
+        body.night-sky-theme input::placeholder,
+        body.night-sky-theme textarea::placeholder {
+            color: #8296b5 !important;
+        }
+        body.night-sky-theme #search-result,
+        body.night-sky-theme #teams-list,
+        body.night-sky-theme #match-list {
+            color: #dce8f8 !important;
+        }
+        body.night-sky-theme #admin-modal > div,
+        body.night-sky-theme #pw-modal > div,
+        body.night-sky-theme #token-modal > div {
+            background: #111f38 !important;
+            border-color: #2b4163 !important;
+            color: #edf4ff !important;
+        }
+        body.night-sky-theme ::-webkit-scrollbar-track { background: #0a162b; }
+        body.night-sky-theme ::-webkit-scrollbar-thumb { background: #344c70; }
+        body.night-sky-theme ::-webkit-scrollbar-thumb:hover { background: #49658d; }
+        body.night-sky-theme .autocomplete-dropdown {
+            background: #0b172c !important;
+            border-color: #344c70 !important;
+        }
+
     </style>
 </head>
-<body id="main-body" class="min-h-screen flex flex-col">
+<body id="main-body" class="min-h-screen flex flex-col night-sky-theme">
 
     <!-- 상단 헤더 -->
     <header id="site-header" class="bg-[#FFF9F2] border-b border-[#F2E6D8] px-6 py-6 flex flex-col items-center justify-center space-y-3 relative shadow-xs transition-colors duration-300">
