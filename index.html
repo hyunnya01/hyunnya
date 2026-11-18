@@ -261,8 +261,7 @@
 
     <script>
         // ==========================================
-        const GIST_ID = 'b3ccc0464c764e83757c201a92d0b45';
-        const GIST_FILENAME = 'gistfile1.txt';
+        const GIST_ID = 'b3ccc0464c764e83757c201a92d0b45';[cite: 5]
         let githubToken = localStorage.getItem('lol_scrim_github_token') || '';
         const MAX_MATCH_BLOCKS = 16;
         // ==========================================
@@ -290,7 +289,8 @@
             const statusEl = document.getElementById('sync-status');
             statusEl.innerText = '⏳ 동기화 중...';
             try {
-                const res = await fetch(`https://gist.githubusercontent.com/hyunnya01/${GIST_ID}/raw/${GIST_FILENAME}?t=${Date.now()}`);
+                // 파일명 오타 방지를 위해 raw/ 까지만 호출하여 Gist 데이터를 안전하게 불러옵니다.
+                const res = await fetch(`https://gist.githubusercontent.com/hyunnya01/${GIST_ID}/raw/?t=${Date.now()}`);
                 if (!res.ok) throw new Error('불러오기 실패');
                 const record = await res.json();
                 
@@ -340,7 +340,7 @@
                     },
                     body: JSON.stringify({
                         files: {
-                            [GIST_FILENAME]: {
+                            'gistfile1.txt': {
                                 content: JSON.stringify({ 
                                     matches: matches,
                                     notes: playerNotes,
