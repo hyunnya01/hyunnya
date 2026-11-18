@@ -48,125 +48,101 @@
             color: #FF8A7A;
         }
     
-        /* Night-sky theme: visual-only overrides; app logic and data are unchanged. */
-        body.night-sky-theme {
+
+
+        /* 선택형 밤하늘 다크 모드 */
+        body.dark-mode {
             background: #080f20 !important;
             color: #e6edf8 !important;
             color-scheme: dark;
         }
-        body.night-sky-theme #site-header {
+        body.dark-mode #site-header,
+        body.dark-mode #site-nav {
             background: #0d1930 !important;
-            border-color: #223452 !important;
             color: #edf4ff !important;
+            border-color: #263b5d !important;
         }
-        body.night-sky-theme #site-nav {
-            background: rgba(11, 23, 44, .94) !important;
-            border-color: #223452 !important;
-        }
-        body.night-sky-theme [class~="bg-white"],
-        body.night-sky-theme [class*="bg-[#FFF"],
-        body.night-sky-theme [class*="bg-[#FAF"],
-        body.night-sky-theme [class*="bg-[#F3"],
-        body.night-sky-theme [class*="bg-[#F4"],
-        body.night-sky-theme [class*="bg-[#EFE"],
-        body.night-sky-theme [class*="bg-[#F0"],
-        body.night-sky-theme [class*="bg-[#F2"] {
-            background-color: #111f38 !important;
+        body.dark-mode main [class~="bg-white"],
+        body.dark-mode main [class*="bg-white/"],
+        body.dark-mode main [class*="bg-[#FFF"],
+        body.dark-mode main [class*="bg-[#FFE"],
+        body.dark-mode main [class*="bg-[#FA"],
+        body.dark-mode main [class*="bg-[#F3"],
+        body.dark-mode main [class*="bg-[#F4"],
+        body.dark-mode main [class*="bg-[#EFE"],
+        body.dark-mode main [class*="bg-[#F0"],
+        body.dark-mode main [class*="bg-[#F2"],
+        body.dark-mode main [class*="bg-[#E0"],
+        body.dark-mode main [class*="bg-[#E3"],
+        body.dark-mode main [class*="bg-[#D4"],
+        body.dark-mode main [class*="bg-sky-100"],
+        body.dark-mode main [class*="bg-rose-50"],
+        body.dark-mode main [class*="bg-emerald-50"],
+        body.dark-mode #admin-modal > div,
+        body.dark-mode #pw-modal > div,
+        body.dark-mode #token-modal > div {
+            background-color: #12213b !important;
             color: #e6edf8 !important;
+            border-color: #30496f !important;
         }
-        body.night-sky-theme [class*="border-[#F"],
-        body.night-sky-theme [class*="border-[#E"],
-        body.night-sky-theme [class*="border-[#D"] {
-            border-color: #2b4163 !important;
+        body.dark-mode main [class*="border-[#F"],
+        body.dark-mode main [class*="border-[#E"],
+        body.dark-mode main [class*="border-[#D"] {
+            border-color: #30496f !important;
         }
-        body.night-sky-theme [class*="text-[#3D352E"],
-        body.night-sky-theme [class*="text-[#6B5B4E"],
-        body.night-sky-theme [class*="text-[#7A6859"],
-        body.night-sky-theme [class*="text-[#8C7A6B"],
-        body.night-sky-theme [class*="text-[#9C8878"],
-        body.night-sky-theme [class*="text-[#B5A495"] {
-            color: #b9c9e2 !important;
+        body.dark-mode main [class*="text-[#3D352E"],
+        body.dark-mode main [class*="text-[#6B5B4E"],
+        body.dark-mode main [class*="text-[#7A6859"],
+        body.dark-mode main [class*="text-[#8C7A6B"],
+        body.dark-mode main [class*="text-[#9C8878"],
+        body.dark-mode main [class*="text-[#B5A495"] {
+            color: #bdcce3 !important;
         }
-        body.night-sky-theme input,
-        body.night-sky-theme textarea,
-        body.night-sky-theme select {
-            background-color: #0a162b !important;
-            color: #edf4ff !important;
-            border-color: #344c70 !important;
+        body.dark-mode input,
+        body.dark-mode textarea,
+        body.dark-mode select {
+            background: #09162b !important;
+            color: #f0f5ff !important;
+            border-color: #3a5278 !important;
         }
-        body.night-sky-theme input::placeholder,
-        body.night-sky-theme textarea::placeholder {
-            color: #8296b5 !important;
-        }
-        body.night-sky-theme #search-result,
-        body.night-sky-theme #teams-list,
-        body.night-sky-theme #match-list {
-            color: #dce8f8 !important;
-        }
-        body.night-sky-theme #admin-modal > div,
-        body.night-sky-theme #pw-modal > div,
-        body.night-sky-theme #token-modal > div {
-            background: #111f38 !important;
-            border-color: #2b4163 !important;
-            color: #edf4ff !important;
-        }
-        body.night-sky-theme ::-webkit-scrollbar-track { background: #0a162b; }
-        body.night-sky-theme ::-webkit-scrollbar-thumb { background: #344c70; }
-        body.night-sky-theme ::-webkit-scrollbar-thumb:hover { background: #49658d; }
-        body.night-sky-theme .autocomplete-dropdown {
+        body.dark-mode input::placeholder,
+        body.dark-mode textarea::placeholder { color: #8499ba !important; }
+        body.dark-mode .autocomplete-dropdown {
             background: #0b172c !important;
             border-color: #344c70 !important;
         }
+        body.dark-mode ::-webkit-scrollbar-track { background: #09162b; }
+        body.dark-mode ::-webkit-scrollbar-thumb { background: #3a5278; }
+        body.dark-mode ::-webkit-scrollbar-thumb:hover { background: #49658d; }
+        .theme-switch {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 4px; border-radius: 9999px;
+            border: 1px solid #e8d9c8; background: #fff;
+        }
+        .theme-switch button {
+            border: 0; border-radius: 9999px; padding: 6px 9px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            color: #7a6859; background: transparent; white-space: nowrap;
+        }
+        .theme-switch button.active { background: #fff0ed; color: #d65f50; }
+        body.dark-mode .theme-switch { background: #111f38; border-color: #344c70; }
+        body.dark-mode .theme-switch button { color: #bdcce3; }
+        body.dark-mode .theme-switch button.active { background: #263d61; color: #f0f5ff; }
 
     </style>
 
-    <style id="night-sky-force-override">
-      /* 강제 야간 테마: Tailwind 유틸리티보다 우선 적용 */
-      html, body.night-sky-theme { background: #080f20 !important; color: #e6edf8 !important; color-scheme: dark !important; }
-      body.night-sky-theme #site-header,
-      body.night-sky-theme #site-nav { background-color: #0b1830 !important; color: #edf4ff !important; border-color: #263b5d !important; }
-      body.night-sky-theme main,
-      body.night-sky-theme main section { color: #dce8f8; }
-      body.night-sky-theme main [class~="bg-white"],
-      body.night-sky-theme main [class*="bg-white/"],
-      body.night-sky-theme main [class*="bg-[#FFF"],
-      body.night-sky-theme main [class*="bg-[#FAF"],
-      body.night-sky-theme main [class*="bg-[#F3"],
-      body.night-sky-theme main [class*="bg-[#F4"],
-      body.night-sky-theme main [class*="bg-[#EFE"],
-      body.night-sky-theme main [class*="bg-[#F0"],
-      body.night-sky-theme main [class*="bg-[#F2"],
-      body.night-sky-theme #admin-modal > div,
-      body.night-sky-theme #pw-modal > div,
-      body.night-sky-theme #token-modal > div {
-        background-color: #12213b !important;
-        color: #e6edf8 !important;
-        border-color: #30496f !important;
-      }
-      body.night-sky-theme main [class*="border-[#F"],
-      body.night-sky-theme main [class*="border-[#E"],
-      body.night-sky-theme main [class*="border-[#D"] { border-color: #30496f !important; }
-      body.night-sky-theme main [class*="text-[#3D352E"],
-      body.night-sky-theme main [class*="text-[#6B5B4E"],
-      body.night-sky-theme main [class*="text-[#7A6859"],
-      body.night-sky-theme main [class*="text-[#8C7A6B"],
-      body.night-sky-theme main [class*="text-[#9C8878"],
-      body.night-sky-theme main [class*="text-[#B5A495"] { color: #bdcce3 !important; }
-      body.night-sky-theme input,
-      body.night-sky-theme textarea,
-      body.night-sky-theme select { background: #09162b !important; color: #f0f5ff !important; border-color: #3a5278 !important; }
-      body.night-sky-theme input::placeholder,
-      body.night-sky-theme textarea::placeholder { color: #8499ba !important; }
-      body.night-sky-theme ::-webkit-scrollbar-track { background: #09162b !important; }
-      body.night-sky-theme ::-webkit-scrollbar-thumb { background: #3a5278 !important; }
-    </style>
+
 
 </head>
-<body id="main-body" class="min-h-screen flex flex-col night-sky-theme" style="background-color:#080f20 !important;color:#e6edf8 !important;">
+<body id="main-body" class="min-h-screen flex flex-col">
 
     <!-- 상단 헤더 -->
     <header id="site-header" class="bg-[#FFF9F2] border-b border-[#F2E6D8] px-6 py-6 flex flex-col items-center justify-center space-y-3 relative shadow-xs transition-colors duration-300">
         <div class="sm:absolute right-6 top-5 flex items-center space-x-2.5">
+            <div class="theme-switch" aria-label="화면 테마 선택">
+                <button type="button" id="theme-light-btn" onclick="setColorTheme('light')" aria-pressed="true">☀️ 화이트</button>
+                <button type="button" id="theme-dark-btn" onclick="setColorTheme('dark')" aria-pressed="false">🌙 다크</button>
+            </div>
             <span id="sync-status" class="text-sm font-medium text-[#8C7A6B] hidden sm:inline">☁️ 클라우드 연결됨</span>
             <button id="admin-badge" class="hidden bg-emerald-100 text-emerald-700 border border-emerald-300 px-3.5 py-1.5 rounded-full text-sm font-bold shadow-2xs">
                 🟢 햇비 모드
@@ -393,6 +369,7 @@
         let activeTabName = 'search';
 
         async function init() {
+            applyColorTheme(localStorage.getItem('scrim-color-theme') || 'light');
             renderMatchBlocks(MAX_MATCH_BLOCKS);
             renderTeamMemberInputs();
             await loadFromCloud();
@@ -450,6 +427,26 @@
             if (tabName === 'matches') renderMatches();
             if (tabName === 'search') renderQuickTags();
             if (tabName === 'teams') renderTeams();
+        }
+
+
+        function applyColorTheme(theme) {
+            const selected = theme === 'dark' ? 'dark' : 'light';
+            document.getElementById('main-body').classList.toggle('dark-mode', selected === 'dark');
+            const lightBtn = document.getElementById('theme-light-btn');
+            const darkBtn = document.getElementById('theme-dark-btn');
+            if (lightBtn && darkBtn) {
+                lightBtn.classList.toggle('active', selected === 'light');
+                darkBtn.classList.toggle('active', selected === 'dark');
+                lightBtn.setAttribute('aria-pressed', String(selected === 'light'));
+                darkBtn.setAttribute('aria-pressed', String(selected === 'dark'));
+            }
+        }
+
+        function setColorTheme(theme) {
+            const selected = theme === 'dark' ? 'dark' : 'light';
+            try { localStorage.setItem('scrim-color-theme', selected); } catch (e) {}
+            applyColorTheme(selected);
         }
 
         function applyThemeState() {
