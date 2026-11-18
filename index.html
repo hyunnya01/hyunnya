@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🐻‍❄️ 멸망전 스크림 기록 🐻‍❄️</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link href="https://cdn.jsdelivr.net/gh/sun-typeface/SUITE/fonts/static/woff2/SUITE.css" rel="stylesheet">
     <style>
         body { 
@@ -129,12 +130,31 @@
         body.dark-mode .theme-switch button { color: #bdcce3; }
         body.dark-mode .theme-switch button.active { background: #263d61; color: #f0f5ff; }
 
+        /* Google 계정 접근 제한 화면 */
+        #access-gate { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 24px; background: #080f20; color: #eef4ff; }
+        #access-gate .access-card { width: 100%; max-width: 440px; padding: 32px; border: 1px solid #31486b; border-radius: 28px; background: #101e35; text-align: center; box-shadow: 0 24px 70px rgba(0,0,0,.35); }
+        #access-gate .access-muted { color: #a9bad4; }
+        #google-signin-button { display: flex; justify-content: center; min-height: 44px; margin-top: 22px; }
+        #access-gate[hidden] { display: none !important; }
+        #site-app { display: none; }
+        #access-requests-list button { cursor: pointer; }
     </style>
 
 
 
 </head>
 <body id="main-body" class="min-h-screen flex flex-col">
+    <section id="access-gate" aria-live="polite">
+        <div class="access-card">
+            <div class="text-5xl mb-4">🐻‍❄️</div>
+            <h1 class="text-2xl font-extrabold mb-2">멸망전 스크림 기록</h1>
+            <p class="access-muted text-sm leading-6">승인된 Google 계정으로 로그인해야<br>사이트와 경기 기록을 열람할 수 있습니다.</p>
+            <div id="google-signin-button"></div>
+            <p id="access-status" class="text-sm mt-5 access-muted">Google 계정으로 로그인해 주세요.</p>
+            <button id="access-logout-btn" type="button" onclick="clearGoogleAccess()" class="hidden mt-4 text-sm underline access-muted">다른 계정으로 로그인</button>
+        </div>
+    </section>
+    <div id="site-app">
 
     <!-- 상단 헤더 -->
     <header id="site-header" class="bg-[#FFF9F2] border-b border-[#F2E6D8] px-6 py-6 flex flex-col items-center justify-center space-y-3 relative shadow-xs transition-colors duration-300">
@@ -148,6 +168,9 @@
                 🟢 햇비 모드
             </button>
             <div id="admin-controls" class="flex items-center space-x-2">
+                <button onclick="openAccessManager()" id="access-manager-btn" class="hidden bg-white hover:bg-[#FAF3EA] text-[#6B5B4E] px-3.5 py-1.5 rounded-full text-sm font-semibold border border-[#E8D9C8] transition shadow-2xs">
+                    👥 접근 승인 관리
+                </button>
                 <button onclick="openTokenModal()" id="token-change-btn" class="hidden bg-white hover:bg-[#FAF3EA] text-[#6B5B4E] px-3.5 py-1.5 rounded-full text-sm font-semibold border border-[#E8D9C8] transition shadow-2xs">
                     🔑 토큰 설정
                 </button>
@@ -322,6 +345,21 @@
         </div>
     </div>
 
+    <!-- Google 접근 승인 관리 모달 -->
+    <div id="access-manager-modal" class="fixed inset-0 bg-[#3D352E]/40 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white border border-[#F0E4D4] p-7 rounded-3xl w-full max-w-lg space-y-4 shadow-xl max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between gap-3">
+                <h3 class="text-xl font-extrabold text-[#3D352E]">👥 사이트 접근 승인 관리</h3>
+                <button onclick="closeAccessManager()" class="text-sm font-bold text-[#8C7A6B]">닫기</button>
+            </div>
+            <p class="text-sm text-[#8C7A6B]">승인한 Google 이메일만 사이트에 접속할 수 있습니다.</p>
+            <div id="access-requests-list" class="space-y-3">
+                <p class="text-sm text-[#8C7A6B]">요청 목록을 불러오는 중입니다.</p>
+            </div>
+            <button onclick="loadAccessRequests()" class="w-full bg-[#FAF6F0] border border-[#E8D9C8] text-[#6B5B4E] py-3 rounded-2xl text-sm font-bold">목록 새로고침</button>
+        </div>
+    </div>
+
     <!-- 비밀번호 변경 모달 -->
     <div id="pw-modal" class="fixed inset-0 bg-[#3D352E]/40 backdrop-blur-xs hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white border border-[#F0E4D4] p-7 rounded-3xl w-full max-w-sm space-y-4 shadow-xl">
@@ -348,8 +386,12 @@
         </div>
     </div>
 
+    </div><!-- /#site-app -->
+
     <script>
         // ==========================================
+        const GOOGLE_CLIENT_ID = '228623919268-8v92690uebd1d4a2v6mc1c9jerg4qmbn.apps.googleusercontent.com';
+        let googleAccessToken = sessionStorage.getItem('scrim-google-access-token') || '';
         const API_BASE = 'https://scrim-site-api.hyunzziii01.workers.dev';
         let sessionToken = '';
         let cloudDataLoaded = false;
@@ -372,7 +414,151 @@
             applyColorTheme(localStorage.getItem('scrim-color-theme') || 'light');
             renderMatchBlocks(MAX_MATCH_BLOCKS);
             renderTeamMemberInputs();
-            await loadFromCloud();
+            initializeGoogleAccess();
+        }
+
+        function setAccessStatus(message) {
+            const el = document.getElementById('access-status');
+            if (el) el.innerText = message;
+        }
+
+        function initializeGoogleAccess() {
+            if (googleAccessToken) {
+                verifyGoogleAccess(googleAccessToken, false);
+            }
+            const waitForGoogle = () => {
+                if (!window.google || !google.accounts || !google.accounts.id) {
+                    setTimeout(waitForGoogle, 250);
+                    return;
+                }
+                google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: (response) => {
+                        if (response && response.credential) {
+                            googleAccessToken = response.credential;
+                            sessionStorage.setItem('scrim-google-access-token', googleAccessToken);
+                            verifyGoogleAccess(googleAccessToken, true);
+                        }
+                    }
+                });
+                google.accounts.id.renderButton(document.getElementById('google-signin-button'), {
+                    theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'ko'
+                });
+            };
+            waitForGoogle();
+        }
+
+        async function verifyGoogleAccess(token, isNewLogin) {
+            setAccessStatus('계정 권한을 확인하고 있습니다...');
+            try {
+                const res = await fetch(`${API_BASE}/api/access`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken: token })
+                });
+                const result = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(result.error || '계정 확인에 실패했습니다.');
+                if (result.status === 'approved') {
+                    document.getElementById('access-gate').hidden = true;
+                    document.getElementById('site-app').style.display = 'flex';
+                    document.getElementById('access-logout-btn').classList.add('hidden');
+                    await loadFromCloud();
+                } else if (result.status === 'pending') {
+                    document.getElementById('access-logout-btn').classList.remove('hidden');
+                    setAccessStatus('접근 승인 요청이 접수되었습니다. 관리자가 승인하면 이 계정으로 사이트를 열람할 수 있습니다.');
+                } else if (result.status === 'rejected') {
+                    document.getElementById('access-logout-btn').classList.remove('hidden');
+                    setAccessStatus('이 Google 계정의 접근 요청이 승인되지 않았습니다. 관리자에게 문의해 주세요.');
+                } else {
+                    setAccessStatus('접근 상태를 확인할 수 없습니다. 다시 로그인해 주세요.');
+                }
+            } catch (e) {
+                console.error(e);
+                googleAccessToken = '';
+                sessionStorage.removeItem('scrim-google-access-token');
+                document.getElementById('site-app').style.display = 'none';
+                document.getElementById('access-gate').hidden = false;
+                setAccessStatus(e.message || '로그인 확인 중 오류가 발생했습니다.');
+            }
+        }
+
+        function clearGoogleAccess() {
+            googleAccessToken = '';
+            sessionStorage.removeItem('scrim-google-access-token');
+            document.getElementById('site-app').style.display = 'none';
+            document.getElementById('access-gate').hidden = false;
+            document.getElementById('access-logout-btn').classList.add('hidden');
+            setAccessStatus('Google 계정으로 로그인해 주세요.');
+            const button = document.getElementById('google-signin-button');
+            button.innerHTML = '';
+            if (window.google && google.accounts && google.accounts.id) {
+                google.accounts.id.disableAutoSelect();
+                google.accounts.id.renderButton(button, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'ko' });
+            }
+        }
+
+        async function accessApi(path, options = {}) {
+            const headers = Object.assign({}, options.headers || {}, { 'Authorization': `Bearer ${googleAccessToken}` });
+            return fetch(`${API_BASE}${path}`, Object.assign({}, options, { headers }));
+        }
+
+        async function openAccessManager() {
+            document.getElementById('access-manager-modal').classList.remove('hidden');
+            await loadAccessRequests();
+        }
+
+        function closeAccessManager() {
+            document.getElementById('access-manager-modal').classList.add('hidden');
+        }
+
+        async function loadAccessRequests() {
+            const list = document.getElementById('access-requests-list');
+            list.innerHTML = '<p class="text-sm text-[#8C7A6B]">요청 목록을 불러오는 중입니다.</p>';
+            try {
+                const res = await fetch(`${API_BASE}/api/access/requests`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || '요청 목록을 불러오지 못했습니다.');
+                const requests = Array.isArray(data.requests) ? data.requests : [];
+                if (!requests.length) {
+                    list.innerHTML = '<p class="text-sm text-[#8C7A6B] bg-[#FAF6F0] p-4 rounded-xl">현재 접근 승인 요청이 없습니다.</p>';
+                    return;
+                }
+                list.innerHTML = requests.map(item => `
+                    <div class="border border-[#E8D9C8] rounded-2xl p-4 space-y-2">
+                        <div class="font-bold text-[#3D352E] break-all">${escapeHtml(item.email || '')}</div>
+                        <div class="text-xs text-[#8C7A6B]">상태: ${escapeHtml(item.status || 'pending')}</div>
+                        <div class="flex gap-2">
+                            <button onclick="setAccessApproval('${encodeURIComponent(item.email)}','approved')" class="flex-1 bg-emerald-500 text-white py-2 rounded-xl text-sm font-bold">승인</button>
+                            <button onclick="setAccessApproval('${encodeURIComponent(item.email)}','rejected')" class="flex-1 bg-rose-500 text-white py-2 rounded-xl text-sm font-bold">거절</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                list.innerHTML = `<p class="text-sm text-rose-600">${escapeHtml(e.message)}</p>`;
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        async function setAccessApproval(encodedEmail, status) {
+            const email = decodeURIComponent(encodedEmail);
+            if (!confirm(email + ' 계정의 접근을 ' + (status === 'approved' ? '승인' : '거절') + '할까요?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/access/approve`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, status })
+                });
+                const result = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(result.error || '권한 변경에 실패했습니다.');
+                await loadAccessRequests();
+            } catch (e) {
+                alert(e.message || '권한 변경 중 오류가 발생했습니다.');
+            }
         }
 
         async function loadFromCloud() {
@@ -380,7 +566,7 @@
             statusEl.innerText = '⏳ 동기화 중...';
             cloudDataLoaded = false;
             try {
-                const res = await fetch(`${API_BASE}/api/data?t=${Date.now()}`, { method: 'GET', cache: 'no-store' });
+                const res = await accessApi(`/api/data?t=${Date.now()}`, { method: 'GET', cache: 'no-store' });
                 if (!res.ok) throw new Error('클라우드 데이터를 불러오지 못했습니다. (' + res.status + ')');
                 const record = await res.json();
                 if (!record || !Array.isArray(record.matches) || !record.notes || typeof record.notes !== 'object' || !Array.isArray(record.teams)) throw new Error('클라우드 데이터 형식이 올바르지 않습니다. 기존 기록 보호를 위해 저장을 중단했습니다.');
@@ -490,6 +676,7 @@
                 isAdmin = false;
                 sessionToken = '';
                 document.getElementById('admin-badge').classList.add('hidden');
+                document.getElementById('access-manager-btn').classList.add('hidden');
                 document.getElementById('admin-toggle-btn').innerText = '🔒 햇비 설정';
                 document.getElementById('record-lock-msg').classList.remove('hidden');
                 document.getElementById('record-form-container').classList.add('hidden');
@@ -519,6 +706,7 @@
                 if(!res.ok||!result.token)throw new Error(result.error||'비밀번호가 올바르지 않습니다.');
                 sessionToken=result.token; isAdmin=true; closeAdminModal();
                 document.getElementById('admin-badge').classList.remove('hidden');
+                document.getElementById('access-manager-btn').classList.remove('hidden');
                 document.getElementById('admin-toggle-btn').innerText='🔓 로그아웃';
                 document.getElementById('record-lock-msg').classList.add('hidden');
                 document.getElementById('record-form-container').classList.remove('hidden');
