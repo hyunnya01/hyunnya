@@ -119,8 +119,50 @@
         }
 
     </style>
+
+    <style id="night-sky-force-override">
+      /* 강제 야간 테마: Tailwind 유틸리티보다 우선 적용 */
+      html, body.night-sky-theme { background: #080f20 !important; color: #e6edf8 !important; color-scheme: dark !important; }
+      body.night-sky-theme #site-header,
+      body.night-sky-theme #site-nav { background-color: #0b1830 !important; color: #edf4ff !important; border-color: #263b5d !important; }
+      body.night-sky-theme main,
+      body.night-sky-theme main section { color: #dce8f8; }
+      body.night-sky-theme main [class~="bg-white"],
+      body.night-sky-theme main [class*="bg-white/"],
+      body.night-sky-theme main [class*="bg-[#FFF"],
+      body.night-sky-theme main [class*="bg-[#FAF"],
+      body.night-sky-theme main [class*="bg-[#F3"],
+      body.night-sky-theme main [class*="bg-[#F4"],
+      body.night-sky-theme main [class*="bg-[#EFE"],
+      body.night-sky-theme main [class*="bg-[#F0"],
+      body.night-sky-theme main [class*="bg-[#F2"],
+      body.night-sky-theme #admin-modal > div,
+      body.night-sky-theme #pw-modal > div,
+      body.night-sky-theme #token-modal > div {
+        background-color: #12213b !important;
+        color: #e6edf8 !important;
+        border-color: #30496f !important;
+      }
+      body.night-sky-theme main [class*="border-[#F"],
+      body.night-sky-theme main [class*="border-[#E"],
+      body.night-sky-theme main [class*="border-[#D"] { border-color: #30496f !important; }
+      body.night-sky-theme main [class*="text-[#3D352E"],
+      body.night-sky-theme main [class*="text-[#6B5B4E"],
+      body.night-sky-theme main [class*="text-[#7A6859"],
+      body.night-sky-theme main [class*="text-[#8C7A6B"],
+      body.night-sky-theme main [class*="text-[#9C8878"],
+      body.night-sky-theme main [class*="text-[#B5A495"] { color: #bdcce3 !important; }
+      body.night-sky-theme input,
+      body.night-sky-theme textarea,
+      body.night-sky-theme select { background: #09162b !important; color: #f0f5ff !important; border-color: #3a5278 !important; }
+      body.night-sky-theme input::placeholder,
+      body.night-sky-theme textarea::placeholder { color: #8499ba !important; }
+      body.night-sky-theme ::-webkit-scrollbar-track { background: #09162b !important; }
+      body.night-sky-theme ::-webkit-scrollbar-thumb { background: #3a5278 !important; }
+    </style>
+
 </head>
-<body id="main-body" class="min-h-screen flex flex-col night-sky-theme">
+<body id="main-body" class="min-h-screen flex flex-col night-sky-theme" style="background-color:#080f20 !important;color:#e6edf8 !important;">
 
     <!-- 상단 헤더 -->
     <header id="site-header" class="bg-[#FFF9F2] border-b border-[#F2E6D8] px-6 py-6 flex flex-col items-center justify-center space-y-3 relative shadow-xs transition-colors duration-300">
