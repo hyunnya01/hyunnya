@@ -261,8 +261,9 @@
 
     <script>
         // ==========================================
-        const GIST_ID = 'b3ccc0464c764e83757c201a92d0b45';[cite: 5]
-        let githubToken = localStorage.getItem('lol_scrim_github_token') || '';
+        const API_BASE = 'https://scrim-site-api.hyunzziii01.workers.dev';
+        let sessionToken = '';
+        let cloudDataLoaded = false;
         const MAX_MATCH_BLOCKS = 16;
         // ==========================================
 
@@ -270,7 +271,6 @@
         let matches = [];
         let playerNotes = {}; 
         let confirmedTeams = []; 
-        let currentAdminPw = localStorage.getItem('lol_scrim_admin_pw') || '1234';
 
         let currentRecordType = 'before'; 
         let currentSearchFilter = 'all'; 
@@ -288,89 +288,37 @@
         async function loadFromCloud() {
             const statusEl = document.getElementById('sync-status');
             statusEl.innerText = '⏳ 동기화 중...';
+            cloudDataLoaded = false;
             try {
-                // 파일명 오타 방지를 위해 raw/ 까지만 호출하여 Gist 데이터를 안전하게 불러옵니다.
-                const res = await fetch(`https://gist.githubusercontent.com/hyunnya01/${GIST_ID}/raw/?t=${Date.now()}`);
-                if (!res.ok) throw new Error('불러오기 실패');
+                const res = await fetch(`${API_BASE}/api/data?t=${Date.now()}`, { method: 'GET', cache: 'no-store' });
+                if (!res.ok) throw new Error('클라우드 데이터를 불러오지 못했습니다. (' + res.status + ')');
                 const record = await res.json();
-                
-                matches = record.matches || [];
-                playerNotes = record.notes || {};
-                confirmedTeams = record.teams || [];
-
-                updateMatchCount();
-                renderMatches();
-                renderQuickTags();
-                renderTeams();
-                if (currentSelectedSummoner) {
-                    renderSummonerDetail(currentSelectedSummoner);
-                }
-
-                statusEl.innerText = '☁️ 클라우드 동기화 완료';
-                statusEl.className = 'text-sm font-semibold text-emerald-600 hidden sm:inline';
-            } catch (e) {
-                console.error(e);
-                statusEl.innerText = '❌ 동기화 오류';
-                statusEl.className = 'text-sm font-semibold text-rose-500 hidden sm:inline';
+                if (!record || !Array.isArray(record.matches) || !record.notes || typeof record.notes !== 'object' || !Array.isArray(record.teams)) throw new Error('클라우드 데이터 형식이 올바르지 않습니다. 기존 기록 보호를 위해 저장을 중단했습니다.');
+                matches=record.matches; playerNotes=record.notes; confirmedTeams=record.teams; cloudDataLoaded=true;
+                updateMatchCount(); renderMatches(); renderQuickTags(); renderTeams();
+                if(currentSelectedSummoner) renderSummonerDetail(currentSelectedSummoner);
+                statusEl.innerText='☁️ 클라우드 동기화 완료'; statusEl.className='text-sm font-semibold text-emerald-600 hidden sm:inline';
+            } catch(e) {
+                console.error(e); statusEl.innerText='❌ 동기화 오류'; statusEl.className='text-sm font-semibold text-rose-500 hidden sm:inline';
+                alert(e.message || '클라우드 데이터를 불러오는 중 오류가 발생했습니다.');
             }
         }
 
         async function saveToCloud() {
-            if (!githubToken) {
-                githubToken = prompt('GitHub Personal Access Token을 입력해주세요 (Gist 수정 권한 필요):');
-                if (!githubToken) {
-                    alert('토큰이 없어 클라우드에 저장할 수 없습니다.');
-                    return false;
-                }
-                localStorage.setItem('lol_scrim_github_token', githubToken.trim());
-            }
-
-            const statusEl = document.getElementById('sync-status');
-            const submitBtns = [document.getElementById('submit-btn'), document.getElementById('submit-btn-bottom')];
-            statusEl.innerText = '⏳ 클라우드 저장 중...';
-            submitBtns.forEach(btn => { if (btn) btn.disabled = true; });
-
+            if(!isAdmin || !sessionToken) { alert('햇비 모드 로그인이 필요합니다.'); return false; }
+            if(!cloudDataLoaded) { alert('클라우드 데이터를 먼저 정상적으로 불러와야 합니다. 기존 기록 보호를 위해 저장을 중단했습니다.'); return false; }
+            const statusEl=document.getElementById('sync-status');
+            const submitBtns=[document.getElementById('submit-btn'),document.getElementById('submit-btn-bottom')];
+            statusEl.innerText='⏳ 클라우드 저장 중...'; submitBtns.forEach(btn=>{if(btn)btn.disabled=true;});
             try {
-                const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${githubToken.trim()}`,
-                        'Accept': 'application/vnd.github+json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        files: {
-                            'gistfile1.txt': {
-                                content: JSON.stringify({ 
-                                    matches: matches,
-                                    notes: playerNotes,
-                                    teams: confirmedTeams
-                                }, null, 2)
-                            }
-                        }
-                    })
-                });
-
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        localStorage.removeItem('lol_scrim_github_token');
-                        githubToken = '';
-                        throw new Error('토큰 인증에 실패했습니다. 올바른 토큰을 다시 입력해주세요.');
-                    }
-                    throw new Error('저장 실패');
-                }
-
-                statusEl.innerText = '☁️ 클라우드 저장 완료';
-                statusEl.className = 'text-sm font-semibold text-emerald-600 hidden sm:inline';
-                return true;
-            } catch (e) {
-                console.error(e);
-                alert(e.message || '클라우드 저장 중 오류가 발생했습니다.');
-                statusEl.innerText = '❌ 저장 실패';
-                return false;
-            } finally {
-                submitBtns.forEach(btn => { if (btn) btn.disabled = false; });
-            }
+                const res=await fetch(`${API_BASE}/api/data`,{method:'PUT',headers:{'Authorization':`Bearer ${sessionToken}`,'Content-Type':'application/json'},body:JSON.stringify({matches,notes:playerNotes,teams:confirmedTeams})});
+                const result=await res.json().catch(()=>({}));
+                if(!res.ok) { if(res.status===401||res.status===403){sessionToken='';isAdmin=false;} throw new Error(result.error||('저장 실패 ('+res.status+')')); }
+                statusEl.innerText='☁️ 클라우드 저장 완료'; statusEl.className='text-sm font-semibold text-emerald-600 hidden sm:inline'; return true;
+            } catch(e) {
+                console.error(e); alert(e.message||'클라우드 저장 중 오류가 발생했습니다.');
+                statusEl.innerText='❌ 저장 실패'; statusEl.className='text-sm font-semibold text-rose-500 hidden sm:inline'; return false;
+            } finally { submitBtns.forEach(btn=>{if(btn)btn.disabled=false;}); }
         }
 
         function switchTab(tabName) {
@@ -430,9 +378,8 @@
         function toggleAdminMode() {
             if (isAdmin) {
                 isAdmin = false;
+                sessionToken = '';
                 document.getElementById('admin-badge').classList.add('hidden');
-                document.getElementById('pw-change-btn').classList.add('hidden');
-                document.getElementById('token-change-btn').classList.add('hidden');
                 document.getElementById('admin-toggle-btn').innerText = '🔒 햇비 설정';
                 document.getElementById('record-lock-msg').classList.remove('hidden');
                 document.getElementById('record-form-container').classList.add('hidden');
@@ -453,56 +400,22 @@
 
         function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
 
-        function verifyAdmin() {
-            const pw = document.getElementById('admin-pw').value;
-            if (pw === currentAdminPw) {
-                isAdmin = true;
-                closeAdminModal();
+        async function verifyAdmin() {
+            const pw=document.getElementById('admin-pw').value;
+            if(!pw)return alert('관리자 비밀번호를 입력해주세요.');
+            try {
+                const res=await fetch(`${API_BASE}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})});
+                const result=await res.json().catch(()=>({}));
+                if(!res.ok||!result.token)throw new Error(result.error||'비밀번호가 올바르지 않습니다.');
+                sessionToken=result.token; isAdmin=true; closeAdminModal();
                 document.getElementById('admin-badge').classList.remove('hidden');
-                document.getElementById('pw-change-btn').classList.remove('hidden');
-                document.getElementById('token-change-btn').classList.remove('hidden');
-                document.getElementById('admin-toggle-btn').innerText = '🔓 로그아웃';
+                document.getElementById('admin-toggle-btn').innerText='🔓 로그아웃';
                 document.getElementById('record-lock-msg').classList.add('hidden');
                 document.getElementById('record-form-container').classList.remove('hidden');
                 document.getElementById('quick-tags-container').classList.remove('hidden');
                 document.getElementById('team-admin-panel').classList.remove('hidden');
-                renderMatches();
-                renderTeams();
-                applyThemeState();
-                alert('🐻‍❄️ 햇비 모드로 전환되었습니다!');
-            } else {
-                alert('비밀번호가 틀렸습니다.');
-            }
-        }
-
-        function openPasswordModal() {
-            document.getElementById('pw-modal').classList.remove('hidden');
-            document.getElementById('new-pw').value = '';
-            document.getElementById('new-pw').focus();
-        }
-        function closePasswordModal() { document.getElementById('pw-modal').classList.add('hidden'); }
-        function saveNewPassword() {
-            const newPw = document.getElementById('new-pw').value.trim();
-            if (!newPw) return alert('변경할 비밀번호를 입력해주세요.');
-            currentAdminPw = newPw;
-            localStorage.setItem('lol_scrim_admin_pw', newPw);
-            closePasswordModal();
-            alert('비밀번호가 성공적으로 변경되었습니다!');
-        }
-
-        function openTokenModal() {
-            document.getElementById('token-modal').classList.remove('hidden');
-            document.getElementById('github-token-input').value = githubToken;
-            document.getElementById('github-token-input').focus();
-        }
-        function closeTokenModal() { document.getElementById('token-modal').classList.add('hidden'); }
-        function saveGitHubToken() {
-            const token = document.getElementById('github-token-input').value.trim();
-            if (!token) return alert('GitHub 토큰을 입력해주세요.');
-            githubToken = token;
-            localStorage.setItem('lol_scrim_github_token', token);
-            closeTokenModal();
-            alert('GitHub 토큰이 저장되었습니다!');
+                renderMatches(); renderTeams(); applyThemeState(); alert('햇비 모드로 전환되었습니다.');
+            } catch(e) { console.error(e); alert(e.message||'로그인 중 오류가 발생했습니다.'); }
         }
 
         function setRecordType(type) {
