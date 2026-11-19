@@ -193,14 +193,14 @@
         <button onclick="switchTab('search')" id="tab-search" class="py-4 px-2 text-base font-bold border-b-3 border-[#FF8A7A] text-[#E86A58] transition">
             🔍 전적 검색 & 모스트
         </button>
-        <button onclick="switchTab('record')" id="tab-record" class="py-4 px-2 text-base font-bold border-b-3 border-transparent text-[#8C7A6B] hover:text-[#3D352E] transition">
-            ➕ 경기 기록
-        </button>
         <button onclick="switchTab('teams')" id="tab-teams" class="py-4 px-2 text-base font-bold border-b-3 border-transparent text-[#8C7A6B] hover:text-[#3D352E] transition">
             🏆 대회 참가팀 현황
         </button>
         <button onclick="switchTab('matches')" id="tab-matches" class="py-4 px-2 text-base font-bold border-b-3 border-transparent text-[#8C7A6B] hover:text-[#3D352E] transition">
             📋 전체 매치 (<span id="match-count">0</span>)
+        </button>
+        <button onclick="switchTab('record')" id="tab-record" class="py-4 px-2 text-base font-bold border-b-3 border-transparent text-[#8C7A6B] hover:text-[#3D352E] transition">
+            ➕ 경기 기록
         </button>
     </nav>
 
@@ -220,6 +220,16 @@
                         <div id="search-autocomplete" class="absolute left-0 right-0 top-full mt-1 hidden z-50 bg-[#111827] border border-gray-700 rounded-2xl shadow-xl max-h-60 overflow-y-auto"></div>
                     </div>
                     <button onclick="searchSummoner()" class="bg-[#FF8A7A] hover:bg-[#F47665] text-white px-7 py-3.5 rounded-2xl text-base font-bold transition shadow-sm cursor-pointer shrink-0">검색</button>
+                </div>
+            </div>
+
+            <div id="favorites-container" class="bg-white border border-[#F0E4D4] p-5 rounded-3xl space-y-3 shadow-sm">
+                <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-sm font-extrabold text-[#7A6859]">⭐ 즐겨찾기 소환사</h3>
+                    <span class="text-xs text-[#9C8878]">내 Google 계정에 저장</span>
+                </div>
+                <div id="favorites-list" class="flex flex-wrap gap-2">
+                    <span class="text-sm text-[#9C8878]">즐겨찾기에 등록한 소환사가 없습니다.</span>
                 </div>
             </div>
 
@@ -399,6 +409,8 @@
         // ==========================================
 
         let isAdmin = false;
+        let currentUserEmail = '';
+        let favoriteSummoners = [];
         let matches = [];
         let playerNotes = {}; 
         let confirmedTeams = []; 
@@ -448,7 +460,79 @@
             waitForGoogle();
         }
 
+        function readGoogleEmail(token) {
+            try {
+                const payloadPart = token.split('.')[1];
+                const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')));
+                return String(payload.email || '').trim().toLowerCase();
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function getFavoriteStorageKey() {
+            return currentUserEmail ? 'scrim-favorites:' + currentUserEmail : '';
+        }
+
+        function loadFavoriteSummoners() {
+            const key = getFavoriteStorageKey();
+            if (!key) {
+                favoriteSummoners = [];
+                return;
+            }
+            try {
+                const saved = JSON.parse(localStorage.getItem(key) || '[]');
+                favoriteSummoners = Array.isArray(saved) ? saved.filter(name => typeof name === 'string') : [];
+            } catch (e) {
+                favoriteSummoners = [];
+            }
+            renderFavorites();
+        }
+
+        function saveFavoriteSummoners() {
+            const key = getFavoriteStorageKey();
+            if (!key) return;
+            try {
+                localStorage.setItem(key, JSON.stringify(favoriteSummoners));
+            } catch (e) {
+                alert('즐겨찾기를 이 브라우저에 저장하지 못했습니다.');
+            }
+        }
+
+        function toggleFavoriteSummoner(name) {
+            if (!currentUserEmail) {
+                alert('Google 계정 확인 후 이용할 수 있습니다.');
+                return;
+            }
+            if (favoriteSummoners.includes(name)) {
+                favoriteSummoners = favoriteSummoners.filter(item => item !== name);
+            } else {
+                favoriteSummoners.push(name);
+            }
+            saveFavoriteSummoners();
+            renderFavorites();
+            if (currentSelectedSummoner) renderSummonerDetail(currentSelectedSummoner);
+        }
+
+        function renderFavorites() {
+            const list = document.getElementById('favorites-list');
+            if (!list) return;
+            if (!favoriteSummoners.length) {
+                list.innerHTML = '<span class="text-sm text-[#9C8878]">즐겨찾기에 등록한 소환사가 없습니다.</span>';
+                return;
+            }
+            list.innerHTML = favoriteSummoners.map(name => `
+                <div class="inline-flex items-center gap-1.5 bg-[#FFF4F2] border border-[#FFD5CE] rounded-full pl-3 pr-1.5 py-1">
+                    <button onclick="selectSummonerForDetail('${name.replace(/'/g, "\\\\'")}')" class="text-sm font-bold text-[#A94F43] hover:underline">${name}</button>
+                    <button onclick="toggleFavoriteSummoner('${name.replace(/'/g, "\\\\'")}')" aria-label="즐겨찾기에서 제거" class="text-xs font-bold text-[#A94F43] hover:bg-white rounded-full w-6 h-6">×</button>
+                </div>
+            `).join('');
+        }
+
         async function verifyGoogleAccess(token, isNewLogin) {
+            currentUserEmail = readGoogleEmail(token);
+            loadFavoriteSummoners();
             setAccessStatus('계정 권한을 확인하고 있습니다...');
             try {
                 const res = await fetch(`${API_BASE}/api/access`, {
@@ -459,6 +543,7 @@
                 const result = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(result.error || '계정 확인에 실패했습니다.');
                 if (result.status === 'approved') {
+                    loadFavoriteSummoners();
                     document.getElementById('access-gate').hidden = true;
                     document.getElementById('site-app').style.display = 'flex';
                     document.getElementById('access-logout-btn').classList.add('hidden');
@@ -1220,15 +1305,17 @@
                 return;
             }
 
-            listEl.innerHTML = confirmedTeams.map(team => `
-                <div class="bg-white border border-[#F0E4D4] p-6 rounded-3xl space-y-4 shadow-sm hover:border-[#FFD5CE] transition">
+            const orderedTeams = [...confirmedTeams].sort((a, b) => Number(!!b.isOurTeam) - Number(!!a.isOurTeam));
+            listEl.innerHTML = orderedTeams.map(team => `
+                <div class="bg-white border ${team.isOurTeam ? 'border-2 border-[#FF8A7A]' : 'border-[#F0E4D4]'} p-6 rounded-3xl space-y-4 shadow-sm hover:border-[#FFD5CE] transition">
                     <div class="flex justify-between items-center border-b border-[#F2E6D8] pb-3.5">
                         <h3 class="text-lg font-extrabold text-[#3D352E] flex items-center gap-2">
-                            <span class="bg-[#FFF0ED] text-[#E86A58] px-2.5 py-1 rounded-xl text-sm">TEAM</span>
+                            ${team.isOurTeam ? '<span class="bg-[#FF8A7A] text-white px-2.5 py-1 rounded-xl text-sm">우리 팀</span>' : '<span class="bg-[#FFF0ED] text-[#E86A58] px-2.5 py-1 rounded-xl text-sm">TEAM</span>'}
                             ${team.name}
                         </h3>
                         <div class="flex items-center space-x-1.5">
                             ${isAdmin ? `
+                                <button onclick="setOurTeam(${team.id})" class="text-xs font-bold ${team.isOurTeam ? 'text-white bg-[#E86A58]' : 'text-[#E86A58] bg-[#FFF4F2]'} border border-[#FFD5CE] px-3 py-1.5 rounded-xl">${team.isOurTeam ? '우리 팀 해제' : '우리 팀 지정'}</button>
                                 <button onclick="editTeam(${team.id})" class="text-xs font-bold text-[#E86A58] bg-[#FFF4F2] border border-[#FFD5CE] px-3 py-1.5 rounded-xl">수정</button>
                                 <button onclick="deleteTeam(${team.id})" class="text-xs font-bold text-rose-500 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-xl">삭제</button>
                             ` : ''}
@@ -1259,6 +1346,18 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        async function setOurTeam(teamId) {
+            if (!isAdmin) {
+                alert('관리자만 우리 팀을 지정할 수 있습니다.');
+                return;
+            }
+            confirmedTeams.forEach(team => {
+                team.isOurTeam = team.id == teamId;
+            });
+            const success = await saveToCloud();
+            if (success) renderTeams();
         }
 
         function goToPlayerSearch(name) {
@@ -1595,9 +1694,14 @@
                                     스크림 전적: <strong class="text-[#3D352E]">${total}전 ${wins}승 ${losses}패</strong>
                                 </p>
                             </div>
-                            <div class="text-right bg-white px-5 py-3 rounded-2xl border border-[#F0E4D4]">
-                                <span class="text-3xl font-extrabold ${winRate >= 50 ? 'text-[#0284C7]' : 'text-[#E11D48]'}">${winRate}%</span>
-                                <p class="text-xs font-bold text-[#9C8878] mt-0.5">승률</p>
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleFavoriteSummoner('${fullName.replace(/'/g, "\\\\'")}')" class="text-sm font-extrabold px-4 py-3 rounded-2xl border transition ${favoriteSummoners.includes(fullName) ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-[#8C7A6B] border-[#E8D9C8] hover:bg-[#FFF4F2]'}">
+                                    ${favoriteSummoners.includes(fullName) ? '⭐ 즐겨찾기 해제' : '☆ 즐겨찾기 추가'}
+                                </button>
+                                <div class="text-right bg-white px-5 py-3 rounded-2xl border border-[#F0E4D4]">
+                                    <span class="text-3xl font-extrabold ${winRate >= 50 ? 'text-[#0284C7]' : 'text-[#E11D48]'}">${winRate}%</span>
+                                    <p class="text-xs font-bold text-[#9C8878] mt-0.5">승률</p>
+                                </div>
                             </div>
                         </div>
 
