@@ -1615,14 +1615,13 @@
                 return;
             }
 
-            const newName = prompt('변경할 새 소환사 닉네임을 입력해 주세요.', oldName);
+            const newName = prompt('변경할 소환사 닉네임을 입력해 주세요.', oldName);
             if (newName === null) return;
             const trimmedName = newName.trim();
             if (!trimmedName) {
-                alert('새 닉네임을 입력해 주세요.');
+                alert('닉네임은 비워둘 수 없습니다.');
                 return;
             }
-            if (trimmedName === oldName) return;
 
             const normalizedOld = oldName.trim().toLowerCase();
             const normalizedNew = trimmedName.toLowerCase();
@@ -1635,7 +1634,30 @@
                 return;
             }
 
-            if (!confirm('「' + oldName + '」의 닉네임을 「' + trimmedName + '」(으)로 변경할까요?\n\n과거 경기 기록과 참가팀 명단, 소환사 메모에도 모두 적용됩니다.')) return;
+            let currentTier = '';
+            confirmedTeams.forEach(team => {
+                (team.members || []).forEach(member => {
+                    if (member.name && member.name.trim().toLowerCase() === normalizedOld && member.tier) currentTier = member.tier;
+                });
+            });
+            matches.forEach(match => {
+                [...(match.blue || []), ...(match.red || [])].forEach(player => {
+                    if (player.name && player.name.trim().toLowerCase() === normalizedOld && player.tier) currentTier = player.tier;
+                });
+            });
+
+            const newTier = prompt('변경할 티어를 입력해 주세요. (예: M800, D1, E2)', currentTier);
+            if (newTier === null) return;
+            const trimmedTier = newTier.trim();
+            const nameChanged = trimmedName !== oldName;
+            const tierChanged = trimmedTier !== currentTier;
+
+            if (!nameChanged && !tierChanged) {
+                alert('변경된 내용이 없습니다.');
+                return;
+            }
+
+            if (!confirm('「' + oldName + '」의 정보를 변경할까요?\n\n닉네임: ' + oldName + ' → ' + trimmedName + '\n티어: ' + (currentTier || '(미입력)') + ' → ' + (trimmedTier || '(미입력)') + '\n\n과거 경기 기록과 참가팀 명단, 소환사 메모에 모두 적용됩니다.')) return;
 
             const previousMatches = JSON.stringify(matches);
             const previousTeams = JSON.stringify(confirmedTeams);
@@ -1643,11 +1665,16 @@
             const previousFavorites = [...favoriteSummoners];
 
             let changedMatches = 0;
+            let changedMatchPlayers = 0;
             matches.forEach(match => {
                 let changed = false;
                 [...(match.blue || []), ...(match.red || [])].forEach(player => {
                     if (player.name && player.name.trim().toLowerCase() === normalizedOld) {
-                        player.name = trimmedName;
+                        if (nameChanged) player.name = trimmedName;
+                        if (player.tier !== trimmedTier) {
+                            player.tier = trimmedTier;
+                            changedMatchPlayers++;
+                        }
                         changed = true;
                     }
                 });
@@ -1658,31 +1685,35 @@
             confirmedTeams.forEach(team => {
                 (team.members || []).forEach(member => {
                     if (member.name && member.name.trim().toLowerCase() === normalizedOld) {
-                        member.name = trimmedName;
-                        changedTeamMembers++;
+                        if (nameChanged) member.name = trimmedName;
+                        if (member.tier !== trimmedTier) {
+                            member.tier = trimmedTier;
+                            changedTeamMembers++;
+                        }
                     }
                 });
             });
 
-            if (Object.prototype.hasOwnProperty.call(playerNotes, oldName)) {
-                playerNotes[trimmedName] = playerNotes[oldName];
-                delete playerNotes[oldName];
-            } else {
-                const oldNoteKey = Object.keys(playerNotes).find(key => key.trim().toLowerCase() === normalizedOld);
-                if (oldNoteKey) {
-                    playerNotes[trimmedName] = playerNotes[oldNoteKey];
-                    delete playerNotes[oldNoteKey];
+            if (nameChanged) {
+                if (Object.prototype.hasOwnProperty.call(playerNotes, oldName)) {
+                    playerNotes[trimmedName] = playerNotes[oldName];
+                    delete playerNotes[oldName];
+                } else {
+                    const oldNoteKey = Object.keys(playerNotes).find(key => key.trim().toLowerCase() === normalizedOld);
+                    if (oldNoteKey) {
+                        playerNotes[trimmedName] = playerNotes[oldNoteKey];
+                        delete playerNotes[oldNoteKey];
+                    }
                 }
+
+                favoriteSummoners = favoriteSummoners.map(name =>
+                    name.trim().toLowerCase() === normalizedOld ? trimmedName : name
+                );
+                favoriteSummoners = [...new Set(favoriteSummoners)];
+                saveFavoriteSummoners();
+                currentSelectedSummoner = trimmedName;
+                document.getElementById('search-input').value = trimmedName;
             }
-
-            favoriteSummoners = favoriteSummoners.map(name =>
-                name.trim().toLowerCase() === normalizedOld ? trimmedName : name
-            );
-            favoriteSummoners = [...new Set(favoriteSummoners)];
-            saveFavoriteSummoners();
-
-            currentSelectedSummoner = trimmedName;
-            document.getElementById('search-input').value = trimmedName;
 
             const success = await saveToCloud();
             if (!success) {
@@ -1702,9 +1733,8 @@
             renderQuickTags();
             renderFavorites();
             renderSummonerDetail(trimmedName);
-            alert('닉네임 변경이 완료되었습니다.\n경기 기록 ' + changedMatches + '개, 참가팀 명단 ' + changedTeamMembers + '곳에 반영했습니다.');
+            alert('소환사 정보 변경이 완료되었습니다.\n경기 기록 ' + changedMatches + '개(선수 기록 ' + changedMatchPlayers + '건), 참가팀 명단 ' + changedTeamMembers + '곳에 반영했습니다.');
         }
-
         function renderSummonerDetail(fullName) {
             const resultEl = document.getElementById('search-result');
             let foundGames = [];
@@ -1795,7 +1825,7 @@
                                 </p>
                             </div>
                             <div class="flex items-center gap-2">
-                                ${isAdmin ? `<button onclick="renameSummonerHistory('${fullName.replace(/'/g, "\\'")}')" class="text-sm font-extrabold px-4 py-3 rounded-2xl border border-[#FFD5CE] bg-[#FFF4F2] text-[#E86A58] hover:bg-[#FFEAE6]">✏️ 닉네임 일괄 수정</button>` : ''}
+                                ${isAdmin ? `<button onclick="renameSummonerHistory('${fullName.replace(/'/g, "\\'")}')" class="text-sm font-extrabold px-4 py-3 rounded-2xl border border-[#FFD5CE] bg-[#FFF4F2] text-[#E86A58] hover:bg-[#FFEAE6]">✏️ 닉네임 / 티어 일괄 수정</button>` : ''}
                                 <button onclick="toggleFavoriteSummoner('${fullName.replace(/'/g, "\\'")}')" class="text-sm font-extrabold px-4 py-3 rounded-2xl border transition ${favoriteSummoners.includes(fullName) ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-[#8C7A6B] border-[#E8D9C8] hover:bg-[#FFF4F2]'}">
                                     ${favoriteSummoners.includes(fullName) ? '⭐ 즐겨찾기 해제' : '☆ 즐겨찾기 추가'}
                                 </button>
