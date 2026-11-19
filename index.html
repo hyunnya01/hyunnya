@@ -524,8 +524,8 @@
             }
             list.innerHTML = favoriteSummoners.map(name => `
                 <div class="inline-flex items-center gap-1.5 bg-[#FFF4F2] border border-[#FFD5CE] rounded-full pl-3 pr-1.5 py-1">
-                    <button onclick="selectSummonerForDetail('${name.replace(/'/g, "\\\\'")}')" class="text-sm font-bold text-[#A94F43] hover:underline">${name}</button>
-                    <button onclick="toggleFavoriteSummoner('${name.replace(/'/g, "\\\\'")}')" aria-label="즐겨찾기에서 제거" class="text-xs font-bold text-[#A94F43] hover:bg-white rounded-full w-6 h-6">×</button>
+                    <button onclick="selectSummonerForDetail('${name.replace(/'/g, "\\'")}')" class="text-sm font-bold text-[#A94F43] hover:underline">${name}</button>
+                    <button onclick="toggleFavoriteSummoner('${name.replace(/'/g, "\\'")}')" aria-label="즐겨찾기에서 제거" class="text-xs font-bold text-[#A94F43] hover:bg-white rounded-full w-6 h-6">×</button>
                 </div>
             `).join('');
         }
@@ -1695,7 +1695,7 @@
                                 </p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button onclick="toggleFavoriteSummoner('${fullName.replace(/'/g, "\\\\'")}')" class="text-sm font-extrabold px-4 py-3 rounded-2xl border transition ${favoriteSummoners.includes(fullName) ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-[#8C7A6B] border-[#E8D9C8] hover:bg-[#FFF4F2]'}">
+                                <button onclick="toggleFavoriteSummoner('${fullName.replace(/'/g, "\\'")}')" class="text-sm font-extrabold px-4 py-3 rounded-2xl border transition ${favoriteSummoners.includes(fullName) ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-white text-[#8C7A6B] border-[#E8D9C8] hover:bg-[#FFF4F2]'}">
                                     ${favoriteSummoners.includes(fullName) ? '⭐ 즐겨찾기 해제' : '☆ 즐겨찾기 추가'}
                                 </button>
                                 <div class="text-right bg-white px-5 py-3 rounded-2xl border border-[#F0E4D4]">
