@@ -1615,7 +1615,7 @@
                 return;
             }
 
-            const newName = prompt('변경할 소환사 닉네임을 입력해 주세요.', oldName);
+            const newName = prompt('합칠 대상 소환사 닉네임을 입력해 주세요.', oldName);
             if (newName === null) return;
             const trimmedName = newName.trim();
             if (!trimmedName) {
@@ -1625,52 +1625,55 @@
 
             const normalizedOld = oldName.trim().toLowerCase();
             const normalizedNew = trimmedName.toLowerCase();
-            const existingName = getAllPlayersList().find(name =>
-                name.trim().toLowerCase() === normalizedNew &&
-                name.trim().toLowerCase() !== normalizedOld
+            const isMerge = normalizedNew !== normalizedOld && getAllPlayersList().some(name =>
+                name.trim().toLowerCase() === normalizedNew
             );
-            if (existingName) {
-                alert('이미 등록된 다른 소환사 닉네임입니다. 기록이 합쳐지는 것을 방지하기 위해 변경을 취소했습니다.');
-                return;
-            }
 
             let currentTier = '';
+            const tierNames = new Set([normalizedOld, normalizedNew]);
             confirmedTeams.forEach(team => {
                 (team.members || []).forEach(member => {
-                    if (member.name && member.name.trim().toLowerCase() === normalizedOld && member.tier) currentTier = member.tier;
+                    if (member.name && tierNames.has(member.name.trim().toLowerCase()) && member.tier) currentTier = member.tier;
                 });
             });
             matches.forEach(match => {
                 [...(match.blue || []), ...(match.red || [])].forEach(player => {
-                    if (player.name && player.name.trim().toLowerCase() === normalizedOld && player.tier) currentTier = player.tier;
+                    if (player.name && tierNames.has(player.name.trim().toLowerCase()) && player.tier) currentTier = player.tier;
                 });
             });
 
-            const newTier = prompt('변경할 티어를 입력해 주세요. (예: M800, D1, E2)', currentTier);
+            const newTier = prompt('합친 뒤 적용할 티어를 입력해 주세요. (예: M800, D1, E2)', currentTier);
             if (newTier === null) return;
             const trimmedTier = newTier.trim();
             const nameChanged = trimmedName !== oldName;
-            const tierChanged = trimmedTier !== currentTier;
 
-            if (!nameChanged && !tierChanged) {
+            if (!nameChanged && trimmedTier === currentTier) {
                 alert('변경된 내용이 없습니다.');
                 return;
             }
 
-            if (!confirm('「' + oldName + '」의 정보를 변경할까요?\n\n닉네임: ' + oldName + ' → ' + trimmedName + '\n티어: ' + (currentTier || '(미입력)') + ' → ' + (trimmedTier || '(미입력)') + '\n\n과거 경기 기록과 참가팀 명단, 소환사 메모에 모두 적용됩니다.')) return;
+            const actionText = isMerge
+                ? '기존 「' + trimmedName + '」의 기록에 「' + oldName + '」의 기록을 합칩니다.'
+                : '「' + oldName + '」의 정보를 변경합니다.';
+            if (!confirm(actionText + '\n\n최종 닉네임: ' + trimmedName + '\n최종 티어: ' + (trimmedTier || '(미입력)') + '\n\n과거 경기 기록, 참가팀 명단, 소환사 메모와 즐겨찾기에 적용됩니다.')) return;
 
             const previousMatches = JSON.stringify(matches);
             const previousTeams = JSON.stringify(confirmedTeams);
             const previousNotes = JSON.stringify(playerNotes);
             const previousFavorites = [...favoriteSummoners];
 
+            const isTargetPlayer = name => name && (
+                name.trim().toLowerCase() === normalizedOld ||
+                name.trim().toLowerCase() === normalizedNew
+            );
+
             let changedMatches = 0;
             let changedMatchPlayers = 0;
             matches.forEach(match => {
                 let changed = false;
                 [...(match.blue || []), ...(match.red || [])].forEach(player => {
-                    if (player.name && player.name.trim().toLowerCase() === normalizedOld) {
-                        if (nameChanged) player.name = trimmedName;
+                    if (isTargetPlayer(player.name)) {
+                        if (player.name !== trimmedName) player.name = trimmedName;
                         if (player.tier !== trimmedTier) {
                             player.tier = trimmedTier;
                             changedMatchPlayers++;
@@ -1684,8 +1687,8 @@
             let changedTeamMembers = 0;
             confirmedTeams.forEach(team => {
                 (team.members || []).forEach(member => {
-                    if (member.name && member.name.trim().toLowerCase() === normalizedOld) {
-                        if (nameChanged) member.name = trimmedName;
+                    if (isTargetPlayer(member.name)) {
+                        if (member.name !== trimmedName) member.name = trimmedName;
                         if (member.tier !== trimmedTier) {
                             member.tier = trimmedTier;
                             changedTeamMembers++;
@@ -1695,19 +1698,18 @@
             });
 
             if (nameChanged) {
-                if (Object.prototype.hasOwnProperty.call(playerNotes, oldName)) {
-                    playerNotes[trimmedName] = playerNotes[oldName];
-                    delete playerNotes[oldName];
-                } else {
-                    const oldNoteKey = Object.keys(playerNotes).find(key => key.trim().toLowerCase() === normalizedOld);
-                    if (oldNoteKey) {
-                        playerNotes[trimmedName] = playerNotes[oldNoteKey];
-                        delete playerNotes[oldNoteKey];
-                    }
-                }
+                const noteKeys = Object.keys(playerNotes).filter(key =>
+                    key.trim().toLowerCase() === normalizedOld ||
+                    key.trim().toLowerCase() === normalizedNew
+                );
+                const noteValues = noteKeys.map(key => playerNotes[key]).filter(value => typeof value === 'string' && value.trim());
+                const mergedNotes = [...new Set(noteValues.map(value => value.trim()))].join('\n\n');
+                noteKeys.forEach(key => delete playerNotes[key]);
+                if (mergedNotes) playerNotes[trimmedName] = mergedNotes;
 
                 favoriteSummoners = favoriteSummoners.map(name =>
-                    name.trim().toLowerCase() === normalizedOld ? trimmedName : name
+                    name.trim().toLowerCase() === normalizedOld || name.trim().toLowerCase() === normalizedNew
+                        ? trimmedName : name
                 );
                 favoriteSummoners = [...new Set(favoriteSummoners)];
                 saveFavoriteSummoners();
@@ -1733,7 +1735,7 @@
             renderQuickTags();
             renderFavorites();
             renderSummonerDetail(trimmedName);
-            alert('소환사 정보 변경이 완료되었습니다.\n경기 기록 ' + changedMatches + '개(선수 기록 ' + changedMatchPlayers + '건), 참가팀 명단 ' + changedTeamMembers + '곳에 반영했습니다.');
+            alert((isMerge ? '소환사 기록 병합' : '소환사 정보 변경') + '이 완료되었습니다.\n경기 기록 ' + changedMatches + '개(선수 기록 ' + changedMatchPlayers + '건), 참가팀 명단 ' + changedTeamMembers + '곳에 반영했습니다.');
         }
         function renderSummonerDetail(fullName) {
             const resultEl = document.getElementById('search-result');
